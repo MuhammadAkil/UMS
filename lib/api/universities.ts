@@ -35,20 +35,30 @@ class UniversityAPI {
     if (params?.type) searchParams.append("type", params.type)
     if (params?.status) searchParams.append("status", params.status)
 
-    const response = await fetch(`${this.baseUrl}/universities?${searchParams}`)
+    const response = await fetch(`${this.baseUrl}/universities?${searchParams}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch universities")
+      throw new Error(`Failed to fetch universities: ${response.statusText}`)
     }
 
     return response.json()
   }
 
   async getUniversity(id: number): Promise<ApiResponse<any>> {
-    const response = await fetch(`${this.baseUrl}/universities/${id}`)
+    const response = await fetch(`${this.baseUrl}/universities/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch university")
+      throw new Error(`Failed to fetch university: ${response.statusText}`)
     }
 
     return response.json()
@@ -64,7 +74,7 @@ class UniversityAPI {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to create university")
+      throw new Error(`Failed to create university: ${response.statusText}`)
     }
 
     return response.json()
@@ -80,7 +90,7 @@ class UniversityAPI {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to update university")
+      throw new Error(`Failed to update university: ${response.statusText}`)
     }
 
     return response.json()
@@ -89,10 +99,13 @@ class UniversityAPI {
   async deleteUniversity(id: number): Promise<ApiResponse<any>> {
     const response = await fetch(`${this.baseUrl}/universities/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
     })
 
     if (!response.ok) {
-      throw new Error("Failed to delete university")
+      throw new Error(`Failed to delete university: ${response.statusText}`)
     }
 
     return response.json()
@@ -108,17 +121,19 @@ class UniversityAPI {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to upload universities")
+      throw new Error(`Failed to upload universities: ${response.statusText}`)
     }
 
     return response.json()
   }
 
   async exportUniversities(format: "csv" | "excel" = "csv"): Promise<Blob> {
-    const response = await fetch(`${this.baseUrl}/universities/export?format=${format}`)
+    const response = await fetch(`${this.baseUrl}/universities/export?format=${format}`, {
+      method: "GET",
+    })
 
     if (!response.ok) {
-      throw new Error("Failed to export universities")
+      throw new Error(`Failed to export universities: ${response.statusText}`)
     }
 
     return response.blob()

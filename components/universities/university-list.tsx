@@ -1,69 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react"
-
-// Dummy data - replace with API call later
-const universities = [
-  {
-    id: 1,
-    name: "Harvard University",
-    location: "Cambridge, MA",
-    type: "Private",
-    established: 1636,
-    students: 23000,
-    status: "Active",
-    ranking: 1,
-  },
-  {
-    id: 2,
-    name: "Stanford University",
-    location: "Stanford, CA",
-    type: "Private",
-    established: 1885,
-    students: 17000,
-    status: "Active",
-    ranking: 2,
-  },
-  {
-    id: 3,
-    name: "MIT",
-    location: "Cambridge, MA",
-    type: "Private",
-    established: 1861,
-    students: 11500,
-    status: "Active",
-    ranking: 3,
-  },
-  {
-    id: 4,
-    name: "University of California, Berkeley",
-    location: "Berkeley, CA",
-    type: "Public",
-    established: 1868,
-    students: 45000,
-    status: "Active",
-    ranking: 4,
-  },
-  {
-    id: 5,
-    name: "Yale University",
-    location: "New Haven, CT",
-    type: "Private",
-    established: 1701,
-    students: 13500,
-    status: "Inactive",
-    ranking: 5,
-  },
-]
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
+import { Edit, Eye, Search, Filter, ArrowUpDown, Trash2 } from "lucide-react"
+import { useUniversityStore } from "@/lib/store/university-store"
+import { toast } from "@/hooks/use-toast"
 
 export function UniversityList() {
+  const { universities, loading, error, fetchUniversities, deleteUniversity, updateUniversity } = useUniversityStore()
+
   const [selectedUniversities, setSelectedUniversities] = useState<number[]>([])
+  const [activeTab, setActiveTab] = useState("public")
+  const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    fetchUniversities()
+  }, [fetchUniversities])
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -81,97 +38,350 @@ export function UniversityList() {
     }
   }
 
+  const handleMoveToInprogress = async () => {
+    try {
+      for (const id of selectedUniversities) {
+        await updateUniversity(id, { status: "Inprogress" as any })
+      }
+      setSelectedUniversities([])
+      toast({
+        title: "Success",
+        description: `${selectedUniversities.length} universities moved to in progress.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move universities.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      for (const id of selectedUniversities) {
+        await deleteUniversity(id)
+      }
+      setSelectedUniversities([])
+      toast({
+        title: "Success",
+        description: `${selectedUniversities.length} universities deleted.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete universities.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleConfirmAll = async () => {
+    try {
+      const inprogressUniversities = universities.filter((u) => u.status === "Inprogress")
+      for (const university of inprogressUniversities) {
+        await updateUniversity(university.id, { status: "Active" })
+      }
+      toast({
+        title: "Success",
+        description: "All universities confirmed successfully.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to confirm universities.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const filteredUniversities = universities.filter((university) => {
+    const matchesSearch =
+      university.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      university.city.toLowerCase().includes(searchQuery.toLowerCase())
+
+    switch (activeTab) {
+      case "public":
+        return matchesSearch && university.status === "Active"
+      case "inprogress":
+        return matchesSearch && university.status === "Inprogress"
+      case "delete":
+        return matchesSearch && university.status === "Deleted"
+      default:
+        return matchesSearch
+    }
+  })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading universities...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    )
+  }
+
   return (
-    <Card>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Universities ({universities.length})</h2>
-          {selectedUniversities.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">{selectedUniversities.length} selected</span>
-              <Button variant="outline" size="sm">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Selected
-              </Button>
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between">
+          <TabsList className="bg-gray-100">
+            <TabsTrigger value="public" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              Public
+            </TabsTrigger>
+            <TabsTrigger value="inprogress" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              Inprogress
+            </TabsTrigger>
+            <TabsTrigger value="delete" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+              Delete
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search"
+                className="pl-10 w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          )}
+            <Button variant="outline" size="sm">
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+          </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
+        <TabsContent value="public" className="mt-6">
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
                   <input
                     type="checkbox"
-                    checked={selectedUniversities.length === universities.length}
+                    checked={
+                      selectedUniversities.length === filteredUniversities.length && filteredUniversities.length > 0
+                    }
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="rounded border-gray-300"
                   />
-                </TableHead>
-                <TableHead>University Name</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Established</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Ranking</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {universities.map((university) => (
-                <TableRow key={university.id}>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selectedUniversities.includes(university.id)}
-                      onChange={(e) => handleSelectUniversity(university.id, e.target.checked)}
-                      className="rounded border-gray-300"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{university.name}</TableCell>
-                  <TableCell>{university.location}</TableCell>
-                  <TableCell>
-                    <Badge variant={university.type === "Private" ? "default" : "secondary"}>{university.type}</Badge>
-                  </TableCell>
-                  <TableCell>{university.established}</TableCell>
-                  <TableCell>{university.students.toLocaleString()}</TableCell>
-                  <TableCell>#{university.ranking}</TableCell>
-                  <TableCell>
-                    <Badge variant={university.status === "Active" ? "default" : "destructive"}>
-                      {university.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </Card>
+                  <span className="text-sm text-gray-600">
+                    Select All Universities • {selectedUniversities.length} Selected
+                  </span>
+                </div>
+                {selectedUniversities.length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={handleMoveToInprogress}>
+                      Move to Inprogress
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 bg-transparent"
+                      onClick={handleDelete}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>
+                        <div className="flex items-center space-x-1">
+                          <span>University Name</span>
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead>No of Programs</TableHead>
+                      <TableHead>Degrees</TableHead>
+                      <TableHead>City</TableHead>
+                      <TableHead>Sector</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUniversities.map((university, index) => (
+                      <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedUniversities.includes(university.id)}
+                            onChange={(e) => handleSelectUniversity(university.id, e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{university.name}</TableCell>
+                        <TableCell>{university.programs || 0}</TableCell>
+                        <TableCell>{university.degrees || "BS, MPhil, PhD"}</TableCell>
+                        <TableCell>{university.city}</TableCell>
+                        <TableCell>
+                          <Badge variant={university.type === "Public" ? "default" : "secondary"}>
+                            {university.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+                <span>
+                  1-{Math.min(8, filteredUniversities.length)} of {filteredUniversities.length}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span>Rows per page:</span>
+                  <select className="border rounded px-2 py-1">
+                    <option>08</option>
+                    <option>16</option>
+                    <option>24</option>
+                  </select>
+                  <div className="flex items-center space-x-1">
+                    <Button variant="outline" size="sm">
+                      1
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      2
+                    </Button>
+                    <span>...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="inprogress" className="mt-6">
+          <Card>
+            <div className="p-6">
+              {filteredUniversities.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedUniversities.length === filteredUniversities.length}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="rounded border-gray-300"
+                      />
+                      <span className="text-sm text-gray-600">
+                        Select All Users • {selectedUniversities.length} Users Selected
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm">
+                        Move to Confirm
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 bg-transparent"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12"></TableHead>
+                          <TableHead>University Name</TableHead>
+                          <TableHead>No of Programs</TableHead>
+                          <TableHead>Degrees</TableHead>
+                          <TableHead>City</TableHead>
+                          <TableHead>Sector</TableHead>
+                          <TableHead className="w-12"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUniversities.map((university, index) => (
+                          <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={selectedUniversities.includes(university.id)}
+                                onChange={(e) => handleSelectUniversity(university.id, e.target.checked)}
+                                className="rounded border-gray-300"
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium">{university.name}</TableCell>
+                            <TableCell>{university.programs || 0}</TableCell>
+                            <TableCell>{university.degrees || "BS, MPhil, PhD"}</TableCell>
+                            <TableCell>{university.city}</TableCell>
+                            <TableCell>
+                              <Badge variant={university.type === "Public" ? "default" : "secondary"}>
+                                {university.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button variant="ghost" size="sm">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="flex justify-end mt-6">
+                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleConfirmAll}>
+                      Confirm All
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No universities in progress</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="delete" className="mt-6">
+          <Card>
+            <div className="p-6">
+              <div className="text-center py-8">
+                <p className="text-gray-500">No universities marked for deletion</p>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
