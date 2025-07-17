@@ -37,11 +37,11 @@ const actions = [
 export function QuickActions() {
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <h3 className="text-lg font-semibold text-gray-600 mb-4">Quick Actions</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
         {actions.map((action) => (
           <Link key={action.title} href={action.href}>
-            <Button variant="ghost" className="h-auto p-4 justify-start text-left w-full">
+            <Button variant="ghost" className="h-auto p-4 justify-start text-left hover:bg-[#5D71FC1C] w-full">
               <div className="flex items-center space-x-3">
                 <div className={`p-2 rounded-lg ${action.color}`}>
                   <action.icon className="w-5 h-5" />

@@ -7,7 +7,7 @@ import { AddUniversityForm } from "@/components/universities/add-university-form
 import { BulkUploadForm } from "@/components/universities/bulk-upload-form"
 
 export default function UniversitiesPage() {
-  const [activeTab, setActiveTab] = useState("manage")
+  const [activeTab, setActiveTab] = useState("add")
 
   return (
     <div className="space-y-6">
@@ -15,19 +15,19 @@ export default function UniversitiesPage() {
         <TabsList className="grid w-full grid-cols-3 bg-gray-100">
           <TabsTrigger
             value="add"
-            className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
           >
             Add University
           </TabsTrigger>
           <TabsTrigger
             value="bulk"
-            className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
           >
             Bulk Upload
           </TabsTrigger>
           <TabsTrigger
             value="manage"
-            className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
           >
             Manage Universities
           </TabsTrigger>

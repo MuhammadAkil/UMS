@@ -182,27 +182,30 @@ export function AddUniversityForm() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-gray-100">
-          <TabsTrigger value="basic" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+          <TabsTrigger value="basic" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
             Basic Information
           </TabsTrigger>
-          <TabsTrigger value="programs" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+          <TabsTrigger value="programs" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
             Programs
           </TabsTrigger>
-          <TabsTrigger value="merit" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+          <TabsTrigger value="merit" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
             Test Merit Formula
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic" className="mt-6">
           <Card>
-            <div className="p-6">
+            <div className="p-6 ">
+              <div className="flex items-center justify-between pb-10">
+                  <h3 className="text-lg text-black font-semibold"> Basic Information</h3>
+                </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">University Full Name</Label>
+                    <Label htmlFor="fullName" className="text-black">University Full Name</Label>
                     <Input
                       id="fullName"
                       placeholder="University of engineering and technology, taxila"
@@ -212,7 +215,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>University Logo / Pic</Label>
+                    <Label className="text-black">University Logo / Pic</Label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Drag & drop image or Browse</p>
@@ -220,7 +223,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="shortName">University Short Name</Label>
+                    <Label htmlFor="shortName" className="text-black">University Short Name</Label>
                     <Input
                       id="shortName"
                       placeholder="eg UET Taxila, LUMS etc"
@@ -230,7 +233,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="website">Website URL</Label>
+                    <Label htmlFor="website" className="text-black">Website URL</Label>
                     <Input
                       id="website"
                       placeholder="https://"
@@ -240,7 +243,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sector">Sector</Label>
+                    <Label htmlFor="sector" className="text-black">Sector</Label>
                     <Select value={formData.sector} onValueChange={(value) => handleInputChange("sector", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select sector eg Government" />
@@ -254,7 +257,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="applyUrl">Apply Url</Label>
+                    <Label htmlFor="applyUrl" className="text-black">Apply Url</Label>
                     <Input
                       id="applyUrl"
                       placeholder="https://"
@@ -264,7 +267,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="fieldOfStudy">Field of Study</Label>
+                    <Label htmlFor="fieldOfStudy" className="text-black">Field of Study</Label>
                     <Select
                       value={formData.fieldOfStudy}
                       onValueChange={(value) => handleInputChange("fieldOfStudy", value)}
@@ -282,7 +285,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-black">Email</Label>
                     <Input
                       id="email"
                       type="email"
@@ -293,7 +296,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city" className="text-black">City</Label>
                     <Select value={formData.city} onValueChange={(value) => handleInputChange("city", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="select city" />
@@ -308,7 +311,7 @@ export function AddUniversityForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone" className="text-black">Phone</Label>
                     <Input
                       id="phone"
                       placeholder="select your course type"
@@ -319,7 +322,7 @@ export function AddUniversityForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address"className="text-black">Address</Label>
                   <Textarea
                     id="address"
                     placeholder="Enter University address"
@@ -330,7 +333,7 @@ export function AddUniversityForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="about">About</Label>
+                  <Label htmlFor="about"className="text-black">About</Label>
                   <Textarea
                     id="about"
                     placeholder="Write about university"
@@ -341,12 +344,9 @@ export function AddUniversityForm() {
                 </div>
 
                 <div className="flex items-center justify-end space-x-4 pt-6">
-                  <Button type="button" variant="outline">
-                    Previous
-                  </Button>
                   <Button
                     type="button"
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-[#5C5FC8] hover:bg-blue-400"
                     onClick={() => setActiveTab("programs")}
                   >
                     Next Programs
@@ -362,36 +362,36 @@ export function AddUniversityForm() {
             <div className="p-6">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Degree Program listing</h3>
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowAddProgram(true)}>
+                  <h3 className="text-lg text-black font-semibold">Degree Program listing</h3>
+                  <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={() => setShowAddProgram(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Program
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">
-                      {programStats.bachelors.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-sm text-gray-600">Bachelors</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">
-                      {programStats.masters.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-sm text-gray-600">Masters/ MPhil</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">
-                      {programStats.phd.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-sm text-gray-600">PhD</div>
-                  </div>
-                </div>
+  <div className="text-center p-4 bg-white rounded-lg shadow">
+    <div className="text-3xl font-bold text-black">
+     {programStats.bachelors.toString().padStart(2, "0")}
+    </div>
+    <div className="text-sm text-gray-600">Bachelors</div>
+  </div>
+  <div className="text-center p-4 bg-white rounded-lg shadow">
+    <div className="text-3xl font-bold text-black">
+      {programStats.masters.toString().padStart(2, "0")}
+    </div>
+    <div className="text-sm text-gray-600">Masters/ MPhil</div>
+  </div>
+  <div className="text-center p-4 bg-white rounded-lg shadow">
+    <div className="text-3xl font-bold text-black">
+     {programStats.phd.toString().padStart(2, "0")}
+    </div>
+    <div className="text-sm text-gray-600">PhD</div>
+  </div>
+</div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full text-black">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-3">Program Name</th>
@@ -442,11 +442,11 @@ export function AddUniversityForm() {
                   1-{programs.length} of {programs.length}
                 </div>
 
-                <div className="flex items-center justify-between pt-6">
+                <div className="flex items-center bg-transparent justify-between pt-6">
                   <Button variant="outline" onClick={() => setActiveTab("basic")}>
                     Previous
                   </Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setActiveTab("merit")}>
+                  <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={() => setActiveTab("merit")}>
                     Next Merit Calculator
                   </Button>
                 </div>
@@ -455,109 +455,111 @@ export function AddUniversityForm() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="merit" className="mt-6">
-          <Card>
-            <div className="p-6">
-              <div className="space-y-6">
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="text-sm text-gray-600">Bachelors</div>
-                    <div className="font-semibold">Masters</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600">Masters</div>
-                    <div className="font-semibold">MPhil</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600">MPhil</div>
-                    <div className="font-semibold">PhD</div>
-                  </div>
-                </div>
+<TabsContent value="merit" className="mt-6">
+  <Card>
+    <div className="p-6 text-black">
+      <div className="space-y-6">
+        <TabsList className="bg-gray-100 w-full justify-start">
+          <TabsTrigger value="bachelors" defaultChecked className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
+          <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>Masters</TabsTrigger>
+          <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>MPhil</TabsTrigger>
+          <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>PhD</TabsTrigger>
+        </TabsList>
 
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Admission Test Type</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="ecat" />
-                        <Label htmlFor="ecat">Ecat</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="mcat" />
-                        <Label htmlFor="mcat">Mcat</Label>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="own-test" />
-                        <Label htmlFor="own-test">Own Test</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="nts" />
-                        <Label htmlFor="nts">NTS</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="sat" />
-                        <Label htmlFor="sat">SAT</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="gat" />
-                        <Label htmlFor="gat">GAT</Label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+<div className="space-y-4">
+  <h3 className="font-semibold">Admission Test Type</h3>
+  <div className="grid grid-cols-6 gap-4">
+    <div className="space-y-2 col-span-2">
+      <div className="flex items-center space-x-2">
+        <Checkbox id="ecat" />
+        <Label htmlFor="ecat">Ecat</Label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="mcat" />
+        <Label htmlFor="mcat">Mcat</Label>
+      </div>
+    </div>
+    <div className="space-y-2 col-span-2">
+      <div className="flex items-center space-x-2">
+        <Checkbox id="own-test" />
+        <Label htmlFor="own-test">Own Test</Label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="nts" />
+        <Label htmlFor="nts">NTS</Label>
+      </div>
+    </div>
+    <div className="space-y-2 col-span-2">
+      <div className="flex items-center space-x-2">
+        <Checkbox id="sat" />
+        <Label htmlFor="sat">SAT</Label>
+      </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox id="gat" />
+        <Label htmlFor="gat">GAT</Label>
+      </div>
+    </div>
+  </div>
+</div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Matric Weightage</Label>
-                    <Button variant="ghost" size="sm" className="text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input placeholder="0%" />
+      <div className="space-y-4">
+  <div className="flex items-center justify-between">
+    <Label>Matric Weightage</Label>
+  </div>
+  <div className="flex items-center gap-2">
+    <Input placeholder="0%" />
+    <Button variant="ghost" size="sm" className="text-red-600 border border-gray-300 rounded-md px-4 py-5">
+      <Trash2 className="w-4 h-4" />
+    </Button>
+  </div>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>FSC Weightage</Label>
-                    <Button variant="ghost" size="sm" className="text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input placeholder="0%" />
+                
+                      <div className="space-y-4">
+  <div className="flex items-center justify-between">
+  <Label>FSC Weightage</Label>
+  </div>
+  <div className="flex items-center gap-2">
+    <Input placeholder="0%" />
+    <Button variant="ghost" size="sm" className="text-red-600 border border-gray-300 rounded-md px-4 py-5">
+      <Trash2 className="w-4 h-4" />
+    </Button>
+  </div>
                 </div>
+                
+                      <div className="space-y-4">
+  <div className="flex items-center justify-between">
+   <Label>Test Weightage</Label>
+  </div>
+  <div className="flex items-center gap-2">
+    <Input placeholder="0%" />
+    <Button variant="ghost" size="sm" className="text-red-600 border border-gray-300 rounded-md px-4 py-5">
+      <Trash2 className="w-4 h-4" />
+    </Button>
+  </div>
+</div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Test Weightage</Label>
-                    <Button variant="ghost" size="sm" className="text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <Input placeholder="0%" />
-                </div>
+       <div className="flex justify-end">
+  <Button variant="outline" className="bg-transparent">
+    <Plus className="w-4 h-4 mr-2" />
+    Add Field
+  </Button>
+</div>
 
-                <Button variant="outline" className="w-full bg-transparent">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Field
-                </Button>
-
-                <div className="flex items-center justify-between pt-6">
-                  <Button variant="outline" onClick={() => setActiveTab("programs")}>
-                    Previous
-                  </Button>
-                  <div className="space-x-2">
-                    <Button variant="outline">Move to Inprogress</Button>
-                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSubmit} disabled={isLoading}>
-                      {isLoading ? "Uploading..." : "Upload University"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
+        <div className="flex items-center justify-between pt-6">
+          <Button className=" bg-transparent" variant="outline" onClick={() => setActiveTab("programs")}>
+            Previous
+          </Button>
+          <div className="space-x-2">
+            <Button variant="outline" className="bg-transparent text-[#5C5FC8] border-[#5C5FC8] hover:bg-blue-400">Move to Inprogress</Button>
+            <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? "Uploading..." : "Upload University"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Card>
+</TabsContent>
       </Tabs>
 
       <AddProgramDrawer open={showAddProgram} onClose={() => setShowAddProgram(false)} onAdd={handleAddProgram} />

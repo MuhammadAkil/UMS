@@ -71,19 +71,18 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
 
       {/* Drawer */}
       <div className="ml-auto w-96 bg-white h-full shadow-xl relative">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Add Program</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+       <div className="relative p-4 border-b">
+  <h2 className="text-lg font-semibold text-black">Add Program</h2>
+  <p className="text-sm text-gray-600 mb-2 mt-2">Fill in the details for this program</p>
+  <Button variant="ghost" size="sm" className="absolute top-4 right-4 bg-gray-400" onClick={onClose}>
+    <X className="w-4 h-4" />
+  </Button>
+</div>
 
         <div className="p-4">
-          <p className="text-sm text-gray-600 mb-6">Fill in the details for this program</p>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="degree">Degree</Label>
+              <Label htmlFor="degree" className="text-black">Degree</Label>
               <Select value={formData.degree} onValueChange={(value) => handleInputChange("degree", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Bachelors" />
@@ -98,7 +97,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="programName">Program name</Label>
+              <Label htmlFor="programName" className="text-black">Program name</Label>
               <Input
                 id="programName"
                 placeholder="Computer Science"
@@ -108,7 +107,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
+              <Label htmlFor="duration" className="text-black">Duration</Label>
               <Select value={formData.duration} onValueChange={(value) => handleInputChange("duration", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="4 Years" />
@@ -123,7 +122,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feePerSemester">Fee per Semester</Label>
+              <Label htmlFor="feePerSemester" className="text-black">Fee per Semester</Label>
               <Input
                 id="feePerSemester"
                 placeholder="150000 Rs"
@@ -133,7 +132,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline">Deadline</Label>
+              <Label htmlFor="deadline" className="text-black">Deadline</Label>
               <Input
                 id="deadline"
                 placeholder="15 may 2026"
@@ -143,7 +142,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="admissionStatus">Admission Status</Label>
+              <Label htmlFor="admissionStatus" className="text-black">Admission Status</Label>
               <Select
                 value={formData.admissionStatus}
                 onValueChange={(value) => handleInputChange("admissionStatus", value as "Open" | "Closed")}
@@ -159,7 +158,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastYearMerit">Last Year Merit</Label>
+              <Label htmlFor="lastYearMerit" className="text-black">Last Year Merit</Label>
               <Input
                 id="lastYearMerit"
                 placeholder="617%"
@@ -172,7 +171,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" className="bg-[#5C5FC8] hover:bg-blue-400">
                 Save
               </Button>
             </div>

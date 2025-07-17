@@ -133,13 +133,13 @@ export function UniversityList() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between">
           <TabsList className="bg-gray-100">
-            <TabsTrigger value="public" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+            <TabsTrigger value="public" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
               Public
             </TabsTrigger>
-            <TabsTrigger value="inprogress" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+            <TabsTrigger value="inprogress" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
               Inprogress
             </TabsTrigger>
-            <TabsTrigger value="delete" className="data-[state=active]:bg-white data-[state=active]:text-blue-600">
+            <TabsTrigger value="delete" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
               Delete
             </TabsTrigger>
           </TabsList>
@@ -154,8 +154,8 @@ export function UniversityList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
+            <Button variant="outline" className=" bg-transparent text-black" size="sm">
+              <Filter className="w-4 h-4 mr-2 " />
               Filters
             </Button>
           </div>
@@ -163,7 +163,7 @@ export function UniversityList() {
 
         <TabsContent value="public" className="mt-6">
           <Card>
-            <div className="p-6">
+            <div className="p-6 text-black">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <input
@@ -180,7 +180,7 @@ export function UniversityList() {
                 </div>
                 {selectedUniversities.length > 0 && (
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" onClick={handleMoveToInprogress}>
+                    <Button className=" bg-transparent" variant="outline" size="sm" onClick={handleMoveToInprogress}>
                       Move to Inprogress
                     </Button>
                     <Button
@@ -240,7 +240,7 @@ export function UniversityList() {
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button variant="ghost" size="sm">
-                              <Eye className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -254,21 +254,20 @@ export function UniversityList() {
                 <span>
                   1-{Math.min(8, filteredUniversities.length)} of {filteredUniversities.length}
                 </span>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center bg-white space-x-2">
                   <span>Rows per page:</span>
                   <select className="border rounded px-2 py-1">
                     <option>08</option>
                     <option>16</option>
                     <option>24</option>
                   </select>
-                  <div className="flex items-center space-x-1">
-                    <Button variant="outline" size="sm">
+                  <div className="flex  bg-white items-center space-x-1">
+                    <Button variant="outline" className="bg-white" size="sm">
                       1
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" className="bg-white" size="sm">
                       2
                     </Button>
-                    <span>...</span>
                   </div>
                 </div>
               </div>
@@ -278,7 +277,7 @@ export function UniversityList() {
 
         <TabsContent value="inprogress" className="mt-6">
           <Card>
-            <div className="p-6">
+            <div className="p-6 text-black">
               {filteredUniversities.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between mb-4">
@@ -294,7 +293,7 @@ export function UniversityList() {
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button className="text-white" variant="outline" size="sm">
                         Move to Confirm
                       </Button>
                       <Button
@@ -358,7 +357,7 @@ export function UniversityList() {
                   </div>
 
                   <div className="flex justify-end mt-6">
-                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleConfirmAll}>
+                    <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={handleConfirmAll}>
                       Confirm All
                     </Button>
                   </div>

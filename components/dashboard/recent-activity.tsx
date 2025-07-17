@@ -39,7 +39,7 @@ const activities = [
 export function RecentActivity() {
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+      <h3 className="text-lg font-semibold text-gray-600 mb-4">Recent Activity</h3>
       <div className="space-y-4">
         {activities.map((activity) => (
           <div key={activity.id} className="flex items-center space-x-3">
