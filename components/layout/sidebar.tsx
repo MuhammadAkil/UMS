@@ -12,7 +12,6 @@ import {
   FileText,
   Calculator,
   Settings,
-  LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
@@ -106,7 +105,6 @@ export function Sidebar() {
           variant="ghost"
           className="w-full justify-start text-red-500 hover:bg-gray-100 hover:text-red-800"
         >
-          <LogOut className="w-5 h-5" />
           {!collapsed && (
             <span className="ml-3 inline-flex items-center">
               <img src="/logout.svg" alt="Logout Icon" className="w-5 h-5 mr-2" />

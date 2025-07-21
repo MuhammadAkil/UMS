@@ -24,7 +24,7 @@ export function UniversityList() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedUniversities(universities.map((u) => u.id))
+      setSelectedUniversities(filteredUniversities.map((u) => u.id))
     } else {
       setSelectedUniversities([])
     }
@@ -168,11 +168,16 @@ export function UniversityList() {
                 <div className="flex items-center space-x-4">
                   <input
                     type="checkbox"
-                    checked={
-                      selectedUniversities.length === filteredUniversities.length && filteredUniversities.length > 0
-                    }
+                    checked={selectedUniversities.length === filteredUniversities.length}
                     onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="rounded border-gray-300"
+                    className="
+                      h-5 w-5             /* Increase height and width */
+                      rounded
+                      border-gray-300
+                      !bg-white
+                      !checked:bg-[#5C5FC8]
+                      !checked:border-[#5C5FC8]
+                    "
                   />
                   <span className="text-sm text-gray-600">
                     Select All Universities • {selectedUniversities.length} Selected
@@ -199,14 +204,9 @@ export function UniversityList() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:none">
                       <TableHead className="w-12"></TableHead>
-                      <TableHead>
-                        <div className="flex items-center space-x-1">
-                          <span>University Name</span>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </div>
-                      </TableHead>
+                      <TableHead>University Name</TableHead>
                       <TableHead>No of Programs</TableHead>
                       <TableHead>Degrees</TableHead>
                       <TableHead>City</TableHead>
@@ -216,7 +216,7 @@ export function UniversityList() {
                   </TableHeader>
                   <TableBody>
                     {filteredUniversities.map((university, index) => (
-                      <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50 hover:none" : "bg-white hover:none"}>
                         <TableCell>
                           <input
                             type="checkbox"
@@ -229,11 +229,7 @@ export function UniversityList() {
                         <TableCell>{university.programs || 0}</TableCell>
                         <TableCell>{university.degrees || "BS, MPhil, PhD"}</TableCell>
                         <TableCell>{university.city}</TableCell>
-                        <TableCell>
-                          <Badge variant={university.type === "Public" ? "default" : "secondary"}>
-                            {university.type}
-                          </Badge>
-                        </TableCell>
+                        <TableCell>{university.type}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <Button variant="ghost" size="sm">
@@ -256,12 +252,12 @@ export function UniversityList() {
                 </span>
                 <div className="flex items-center bg-white space-x-2">
                   <span>Rows per page:</span>
-                  <select className="border rounded px-2 py-1">
+                  <select className="border bg-white rounded px-2 py-1">
                     <option>08</option>
                     <option>16</option>
                     <option>24</option>
                   </select>
-                  <div className="flex  bg-white items-center space-x-1">
+                  <div className="flex bg-white items-center space-x-1">
                     <Button variant="outline" className="bg-white" size="sm">
                       1
                     </Button>
@@ -286,7 +282,7 @@ export function UniversityList() {
                         type="checkbox"
                         checked={selectedUniversities.length === filteredUniversities.length}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="rounded border-gray-300"
+                        className="rounded border-gray-300 bg-white"
                       />
                       <span className="text-sm text-gray-600">
                         Select All Users • {selectedUniversities.length} Users Selected
@@ -310,7 +306,7 @@ export function UniversityList() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="hover:none">
                           <TableHead className="w-12"></TableHead>
                           <TableHead>University Name</TableHead>
                           <TableHead>No of Programs</TableHead>
@@ -322,7 +318,7 @@ export function UniversityList() {
                       </TableHeader>
                       <TableBody>
                         {filteredUniversities.map((university, index) => (
-                          <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                          <TableRow key={university.id} className={index % 2 === 0 ? "bg-gray-50 hover:none" : "bg-white hover:none"}>
                             <TableCell>
                               <input
                                 type="checkbox"
@@ -335,11 +331,7 @@ export function UniversityList() {
                             <TableCell>{university.programs || 0}</TableCell>
                             <TableCell>{university.degrees || "BS, MPhil, PhD"}</TableCell>
                             <TableCell>{university.city}</TableCell>
-                            <TableCell>
-                              <Badge variant={university.type === "Public" ? "default" : "secondary"}>
-                                {university.type}
-                              </Badge>
-                            </TableCell>
+                            <TableCell>{university.type}</TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <Button variant="ghost" size="sm">

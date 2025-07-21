@@ -12,6 +12,7 @@ export default function MCQsPage() {
 
   return (
     <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">MCQs Management</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4 bg-gray-100">
           <TabsTrigger
