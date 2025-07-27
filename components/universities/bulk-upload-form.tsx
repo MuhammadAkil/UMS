@@ -6,7 +6,7 @@ import { useState, useCallback, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Upload, Download, FileText, CheckCircle, X } from "lucide-react"
+import { Upload, Download, FileText, CheckCircle, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useUniversityStore } from "@/lib/store/university-store"
 
@@ -86,47 +86,46 @@ export function BulkUploadForm() {
     setUploadProgress(0)
     setUploadComplete(false)
 
-    // Clear any existing interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-
-    // Simulate upload progress
-    intervalRef.current = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-          }
-          return 100
-        }
-        return prev + 10
-      })
-    }, 200)
+    const formData = new FormData()
+    formData.append("file", file)
 
     try {
-      await bulkUploadUniversities(file)
+      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const response = await fetch(`${backendUrl}/api/universities/bulk-upload`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8",
+        },
+      })
 
-      setTimeout(() => {
-        setUploading(false)
-        setUploadComplete(true)
-        toast({
-          title: "Upload Complete",
-          description: "Universities have been uploaded successfully.",
-        })
-      }, 2000)
-    } catch (error) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+      const result = await response.json()
+
+      if (response.ok) {
+        setTimeout(() => {
+          setUploading(false)
+          setUploadComplete(true)
+          toast({
+            title: "Upload Successful",
+            description: "Universities have been uploaded successfully.",
+          })
+        }, 1000)
+      } else {
+        throw new Error(result.message || "Failed to upload universities.")
       }
+    } catch (error) {
       setUploading(false)
       toast({
         title: "Upload Failed",
-        description: "Failed to upload universities.",
+        description: error.message || "Failed to upload universities.",
         variant: "destructive",
       })
+    } finally {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
     }
-  }, [file, bulkUploadUniversities, toast])
+  }, [file, toast])
 
   const handleReset = useCallback(() => {
     setFile(null)
@@ -139,7 +138,6 @@ export function BulkUploadForm() {
   }, [])
 
   const downloadTemplate = useCallback(() => {
-    // Create CSV template
     const csvContent = `University Name,University Code,Type,City,Country,Email,Phone,Website,Description
 Harvard University,HARV,Private,Cambridge,USA,info@harvard.edu,+1-617-495-1000,https://harvard.edu,Harvard University is a private Ivy League research university
 Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,https://stanford.edu,Stanford University is a private research university`
@@ -218,12 +216,9 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
                 </div>
 
                 {uploading && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Uploading...</span>
-                      <span className="text-sm text-gray-600">{uploadProgress}%</span>
-                    </div>
-                    <Progress value={uploadProgress} className="w-full" />
+                  <div className="flex items-center justify-center space-y-2">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                    <span className="text-sm font-medium">Uploading...</span>
                   </div>
                 )}
 
