@@ -137,26 +137,26 @@ export function BulkUploadForm() {
     }
   }, [])
 
-  const downloadTemplate = useCallback(() => {
-    const csvContent = `University Name,University Code,Type,City,Country,Email,Phone,Website,Description
-Harvard University,HARV,Private,Cambridge,USA,info@harvard.edu,+1-617-495-1000,https://harvard.edu,Harvard University is a private Ivy League research university
-Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,https://stanford.edu,Stanford University is a private research university`
+const downloadTemplate = useCallback(() => {
+  const csvContent = `university_full_name,university_short_name,sector,field_of_study,City,address,about,logo_url,website_url,apply_url,email,phone,program_name,degree_level,application_deadline,last_year_merit,duration,fee_per_semester,admission_status
+National University of Sciences and Technology,NUST,Public,Engineering,Islamabad,Sector H-12 Islamabad,NUST is one of the top-ranked universities in Pakistan.,https://yourdomain.com/logos/nust.png,https://nust.edu.pk,https://admissions.nust.edu.pk,info@nust.edu.pk,051-111-116-878,BS Computer Science,Bachelors,2025-07-15,80.0%,4 Years,PKR 100000,Open
+University of the Punjab,PU,Public,Arts and Humanities,Islamabad,Quaid-e-Azam Campus Lahore,One of the oldest and largest universities in Pakistan.,https://yourdomain.com/logos/pu.png,http://pu.edu.pk,http://admissions.pu.edu.pk,info@pu.edu.pk,042-111-001-882,BS Computer Science,Bachelors,2025-07-15,80.0%,4 Years,PKR 100000,Open`
 
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "university_template.csv"
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "university_management_template.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 
-    toast({
-      title: "Template Downloaded",
-      description: "CSV template has been downloaded successfully.",
-    })
-  }, [toast])
+  toast({
+    title: "Template Downloaded",
+    description: "CSV template has been downloaded successfully.",
+  });
+}, [toast])
 
   return (
     <div className="space-y-6">
