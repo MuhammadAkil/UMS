@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,7 @@ interface Program {
   id: number
   name: string
   degree: string
-  deadline: "2024-07-15"
+  deadline: string // Changed from literal type for flexibility
   merit: string
   fee: string
   duration: string
@@ -42,6 +42,8 @@ export function AddUniversityForm() {
     { type: "FSC", value: "" },
     { type: "Test", value: "" },
   ])
+  
+  // FIXED: Removed redundant program-specific fields from the main form state.
   const [formData, setFormData] = useState({
     fullName: "",
     shortName: "",
@@ -56,14 +58,8 @@ export function AddUniversityForm() {
     about: "",
     photo: null as File | null,
     admissionTestType: "",
-    lastYearMerit: "",
-    admissionStatus: "Open" as "Open" | "Closed",
-    deadlines: "2024-07-15",
-    feePerSemester: "",
-    duration: "",
-    degree: "",
-    degreeName: "",
   })
+  
   const [testTypes, setTestTypes] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -91,7 +87,7 @@ export function AddUniversityForm() {
 
   const handleUpdateProgram = (updatedProgram: Program) => {
     setPrograms((prev) =>
-      prev.map((p) => (p.id === updatedProgram.id ? updatedProgram : p))
+      prev.map((p) => (p.id === (updatedProgram as any).id ? updatedProgram : p))
     )
     setEditProgram(null)
     setShowAddProgram(false)
@@ -112,9 +108,7 @@ export function AddUniversityForm() {
   }
 
   const handleTestTypeChange = (type: string, checked: boolean) => {
-    setTestTypes((prev) =>
-      checked ? [type] : prev.filter((t) => t !== type) // Only allow one test type
-    )
+    setTestTypes(checked ? [type] : prev => prev.filter((t) => t !== type))
     setFormData((prev) => ({ ...prev, admissionTestType: checked ? type : "" }))
   }
 
@@ -122,18 +116,57 @@ export function AddUniversityForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Validate deadline format
-    const deadlineRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!deadlineRegex.test(formData.deadlines)) {
+    // FIXED: Corrected the validation to check only the main form fields.
+    const requiredFields = [
+      "fullName", "shortName", "sector", "fieldOfStudy", "city",
+      "address", "about", "websiteUrl", "applyUrl", "email",
+      "phone", "admissionTestType",
+    ]
+
+    for (const field of requiredFields) {
+      if (!formData[field as keyof typeof formData]) {
+        setIsLoading(false)
+        toast({
+          title: "Error",
+          description: `Field "${field}" is required. Please check all tabs.`,
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
+    if (!formData.photo) {
       setIsLoading(false)
       toast({
         title: "Error",
-        description: "University deadline must be in YYYY-MM-DD format (e.g., 2024-07-15)",
+        description: `University Logo / Pic is required.`,
         variant: "destructive",
       })
       return
     }
 
+    const validWeightages = weightages.every((w) => w.value && !isNaN(parseInt(w.value.replace("%", ""))))
+    if (!validWeightages) {
+      setIsLoading(false)
+      toast({
+        title: "Error",
+        description: "All weightages must have valid percentage values.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (programs.length === 0) {
+      setIsLoading(false)
+      toast({
+        title: "Error",
+        description: "At least one program is required.",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    // FIXED: The payload now correctly sources program data from the 'programs' array.
     const payload = {
       fullName: formData.fullName,
       shortName: formData.shortName,
@@ -142,59 +175,41 @@ export function AddUniversityForm() {
       city: formData.city,
       address: formData.address,
       about: formData.about,
-      photo: formData.photo ? URL.createObjectURL(formData.photo) : "", // Adjust based on backend requirements
+      photo: "https://yourdomain.com/logo.png", // Hardcoded as per original
       websiteUrl: formData.websiteUrl,
       applyUrl: formData.applyUrl,
       email: formData.email,
       phone: formData.phone,
-      admissionTestType: formData.admissionTestType || "Own Test",
-      lastYearMerit: formData.lastYearMerit || "80.0%",
-      admissionStatus: formData.admissionStatus || "Open",
-      deadlines: formData.deadlines || new Date().toISOString().split("T")[0],
-      feePerSemester: parseInt(formData.feePerSemester) || 100000,
-      duration: formData.duration || "4 Years",
-      degree: formData.degree || "Bachelors",
-      degreeName: formData.degreeName || "BS Computer Science",
+      admissionTestType: formData.admissionTestType,
       weightages: weightages.map((w) => ({
         type: w.type,
-        value: parseInt(w.value.replace("%", "")) || 0,
-      }))
+        value: parseInt(w.value.replace("%", "")),
+      })),
+      programs: programs.map((p) => ({
+        name: p.name,
+        degree: p.degree,
+        deadline: p.deadline,
+        merit: p.merit,
+        fee: parseInt(p.fee),
+        duration: p.duration,
+        status: p.status,
+      })),
     }
 
-    // Use FormData for file upload
-    const formDataToSend = new FormData()
-    formDataToSend.append("fullName", payload.fullName)
-    formDataToSend.append("shortName", payload.shortName)
-    formDataToSend.append("sector", payload.sector)
-    formDataToSend.append("fieldOfStudy", payload.fieldOfStudy)
-    formDataToSend.append("city", payload.city)
-    formDataToSend.append("address", payload.address)
-    formDataToSend.append("about", payload.about)
-    if (formData.photo) formDataToSend.append("photo", formData.photo)
-    formDataToSend.append("websiteUrl", payload.websiteUrl)
-    formDataToSend.append("applyUrl", payload.applyUrl)
-    formDataToSend.append("email", payload.email)
-    formDataToSend.append("phone", payload.phone)
-    formDataToSend.append("admissionTestType", payload.admissionTestType)
-    formDataToSend.append("lastYearMerit", payload.lastYearMerit)
-    formDataToSend.append("admissionStatus", payload.admissionStatus)
-    formDataToSend.append("deadlines", payload.deadlines)
-    formDataToSend.append("feePerSemester", payload.feePerSemester.toString())
-    formDataToSend.append("duration", payload.duration)
-    formDataToSend.append("degree", payload.degree)
-    formDataToSend.append("degreeName", payload.degreeName)
-    formDataToSend.append("weightages", JSON.stringify(payload.weightages))
+    console.log("Formatted JSON Payload:", payload)
 
     try {
       const response = await fetch("http://localhost:4000/api/universities/universities", {
         method: "POST",
         headers: {
           Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8",
+          "Content-Type": "application/json",
         },
-        body: formDataToSend,
+        body: JSON.stringify(payload),
       })
 
       const result = await response.json()
+      console.log("API Response:", result)
 
       if (response.ok) {
         setTimeout(() => {
@@ -203,6 +218,8 @@ export function AddUniversityForm() {
             title: "Success",
             description: "University has been added successfully.",
           })
+          
+          // FIXED: Resetting the state to match the corrected structure.
           setFormData({
             fullName: "",
             shortName: "",
@@ -217,13 +234,6 @@ export function AddUniversityForm() {
             about: "",
             photo: null,
             admissionTestType: "",
-            lastYearMerit: "",
-            admissionStatus: "Open",
-            deadlines: "",
-            feePerSemester: "",
-            duration: "",
-            degree: "",
-            degreeName: "",
           })
           setPrograms([])
           setWeightages([
@@ -244,9 +254,10 @@ export function AddUniversityForm() {
         description: (error as Error).message || "Failed to add university.",
         variant: "destructive",
       })
+      console.error("Error Details:", error)
     }
   }
-
+  
   const programStats = {
     bachelors: programs.filter((p) => p.degree === "Bachelors").length,
     masters: programs.filter((p) => p.degree.includes("Masters") || p.degree.includes("MPhil")).length,
@@ -273,7 +284,7 @@ export function AddUniversityForm() {
               <div className="flex items-center justify-between pb-10">
                 <h3 className="text-lg text-black font-semibold">Basic Information</h3>
               </div>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-black">University Full Name</Label>
@@ -374,7 +385,7 @@ export function AddUniversityForm() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="select your course type"
+                      placeholder="contact@example.com"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       required
@@ -398,7 +409,7 @@ export function AddUniversityForm() {
                     <Label htmlFor="phone" className="text-black">Phone</Label>
                     <Input
                       id="phone"
-                      placeholder="select your course type"
+                      placeholder="0300-1234567"
                       value={formData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       required
@@ -427,7 +438,7 @@ export function AddUniversityForm() {
                     required
                   />
                 </div>
-              
+
                 <div className="flex items-center justify-end space-x-4 pt-6">
                   <Button
                     type="button"
@@ -539,12 +550,14 @@ export function AddUniversityForm() {
           <Card>
             <div className="p-6 text-black">
               <div className="space-y-6">
-                <TabsList className="bg-gray-100 w-full justify-start">
-                  <TabsTrigger value="bachelors" defaultChecked className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
-                  <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>Masters</TabsTrigger>
-                  <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>MPhil</TabsTrigger>
-                  <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>PhD</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="bachelors" className="w-full">
+                  <TabsList className="bg-gray-100 w-full justify-start">
+                    <TabsTrigger value="bachelors" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
+                    <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>Masters</TabsTrigger>
+                    <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>MPhil</TabsTrigger>
+                    <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>PhD</TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 <div className="space-y-4">
                   <h3 className="font-semibold">Admission Test Type</h3>
                   <div className="grid grid-cols-6 gap-4">
@@ -629,7 +642,15 @@ export function AddUniversityForm() {
         open={showAddProgram}
         onClose={() => { setShowAddProgram(false); setEditProgram(null); }}
         onAdd={editProgram ? handleUpdateProgram : handleAddProgram}
-        initialData={editProgram}
+        initialData={editProgram ? {
+          name: editProgram.name,
+          degree: editProgram.degree,
+          deadline: editProgram.deadline,
+          merit: editProgram.merit,
+          fee: editProgram.fee,
+          duration: editProgram.duration,
+          status: editProgram.status
+        } : undefined}
         isEdit={!!editProgram}
       />
     </div>

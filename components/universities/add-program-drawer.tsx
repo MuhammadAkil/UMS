@@ -1,3 +1,4 @@
+// add-program-drawer.tsx
 "use client"
 
 import type React from "react"
@@ -65,7 +66,30 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Validate deadline format (YYYY-MM-DD)
+
+    // Validate required fields
+    const requiredFields = [
+      { key: "degree", label: "Degree" },
+      { key: "programName", label: "Program Name" },
+      { key: "duration", label: "Duration" },
+      { key: "feePerSemester", label: "Fee per Semester" },
+      { key: "deadline", label: "Deadline" },
+      { key: "admissionStatus", label: "Admission Status" },
+      { key: "lastYearMerit", label: "Last Year Merit" },
+    ]
+
+    for (const field of requiredFields) {
+      if (!formData[field.key as keyof typeof formData]) {
+        toast({
+          title: "Error",
+          description: `${field.label} is required.`,
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
+    // Validate deadline format
     const deadlineRegex = /^\d{4}-\d{2}-\d{2}$/
     if (!deadlineRegex.test(formData.deadline)) {
       toast({
@@ -75,15 +99,42 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
       })
       return
     }
-    onAdd({
+
+    // Validate lastYearMerit format
+    const meritRegex = /^\d+\.\d+%$/ // Must be like "80.0%"
+    if (!meritRegex.test(formData.lastYearMerit)) {
+      toast({
+        title: "Error",
+        description: "Last Year Merit must be in the format '80.0%'.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate feePerSemester as a number
+    if (isNaN(parseInt(formData.feePerSemester))) {
+      toast({
+        title: "Error",
+        description: "Fee per Semester must be a valid number.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const programData = {
       name: formData.programName,
       degree: formData.degree,
       deadline: formData.deadline,
       merit: formData.lastYearMerit,
-      fee: formData.feePerSemester,
+      fee: parseInt(formData.feePerSemester).toString(),
       duration: formData.duration,
       status: formData.admissionStatus,
-    })
+    }
+
+    console.log("Program data being passed to onAdd:", programData) // Debugging
+
+    onAdd(programData)
+
     setFormData({
       degree: "",
       programName: "",
@@ -132,6 +183,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                 placeholder="Computer Science"
                 value={formData.programName}
                 onChange={(e) => handleInputChange("programName", e.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -155,6 +207,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                 placeholder="150000"
                 value={formData.feePerSemester}
                 onChange={(e) => handleInputChange("feePerSemester", e.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -164,6 +217,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                 placeholder="2024-07-15"
                 value={formData.deadline}
                 onChange={(e) => handleInputChange("deadline", e.target.value)}
+                required
               />
             </div>
             <div className="space-y-2">
@@ -171,6 +225,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
               <Select
                 value={formData.admissionStatus}
                 onValueChange={(value) => handleInputChange("admissionStatus", value as "Open" | "Closed")}
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Open" />
@@ -186,8 +241,9 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
               <Input
                 id="lastYearMerit"
                 placeholder="80.0%"
-                value={formData.lastYearMerit}
-                onChange={(e) => handleInputChange("lastYearMerit", e.target.value)}
+                value={formData.lastYearMerit || ""}
+                onChange={(e) => setFormData({ ...formData, lastYearMerit: e.target.value })}
+                required
               />
             </div>
             <div className="flex items-center justify-end space-x-2 pt-6">
