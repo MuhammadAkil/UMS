@@ -1,24 +1,36 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
+
 import { Card } from "@/components/ui/card"
+
 import { Button } from "@/components/ui/button"
+
 import { Input } from "@/components/ui/input"
+
 import { Label } from "@/components/ui/label"
+
 import { Textarea } from "@/components/ui/textarea"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 import { Checkbox } from "@/components/ui/checkbox"
+
 import { Upload, Plus, Trash2, Edit, Loader2 } from "lucide-react"
+
 import { useToast } from "@/hooks/use-toast"
+
 import { AddProgramDrawer } from "./add-program-drawer"
 
 interface Program {
   id: number
   name: string
   degree: string
-  deadline: string // Changed from literal type for flexibility
+  deadline: string
   merit: string
   fee: string
   duration: string
@@ -42,8 +54,7 @@ export function AddUniversityForm() {
     { type: "FSC", value: "" },
     { type: "Test", value: "" },
   ])
-  
-  // FIXED: Removed redundant program-specific fields from the main form state.
+
   const [formData, setFormData] = useState({
     fullName: "",
     shortName: "",
@@ -59,7 +70,7 @@ export function AddUniversityForm() {
     photo: null as File | null,
     admissionTestType: "",
   })
-  
+
   const [testTypes, setTestTypes] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -116,57 +127,6 @@ export function AddUniversityForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    // FIXED: Corrected the validation to check only the main form fields.
-    const requiredFields = [
-      "fullName", "shortName", "sector", "fieldOfStudy", "city",
-      "address", "about", "websiteUrl", "applyUrl", "email",
-      "phone", "admissionTestType",
-    ]
-
-    for (const field of requiredFields) {
-      if (!formData[field as keyof typeof formData]) {
-        setIsLoading(false)
-        toast({
-          title: "Error",
-          description: `Field "${field}" is required. Please check all tabs.`,
-          variant: "destructive",
-        })
-        return
-      }
-    }
-
-    if (!formData.photo) {
-      setIsLoading(false)
-      toast({
-        title: "Error",
-        description: `University Logo / Pic is required.`,
-        variant: "destructive",
-      })
-      return
-    }
-
-    const validWeightages = weightages.every((w) => w.value && !isNaN(parseInt(w.value.replace("%", ""))))
-    if (!validWeightages) {
-      setIsLoading(false)
-      toast({
-        title: "Error",
-        description: "All weightages must have valid percentage values.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (programs.length === 0) {
-      setIsLoading(false)
-      toast({
-        title: "Error",
-        description: "At least one program is required.",
-        variant: "destructive",
-      })
-      return
-    }
-    
-    // FIXED: The payload now correctly sources program data from the 'programs' array.
     const payload = {
       fullName: formData.fullName,
       shortName: formData.shortName,
@@ -175,7 +135,7 @@ export function AddUniversityForm() {
       city: formData.city,
       address: formData.address,
       about: formData.about,
-      photo: "https://yourdomain.com/logo.png", // Hardcoded as per original
+      photo: formData.photo ? "https://yourdomain.com/logo.png" : null,
       websiteUrl: formData.websiteUrl,
       applyUrl: formData.applyUrl,
       email: formData.email,
@@ -183,7 +143,7 @@ export function AddUniversityForm() {
       admissionTestType: formData.admissionTestType,
       weightages: weightages.map((w) => ({
         type: w.type,
-        value: parseInt(w.value.replace("%", "")),
+        value: parseInt(w.value.replace("%", "")) || 0,
       })),
       programs: programs.map((p) => ({
         name: p.name,
@@ -197,7 +157,6 @@ export function AddUniversityForm() {
     }
 
     console.log("Formatted JSON Payload:", payload)
-
     try {
       const response = await fetch("http://localhost:4000/api/universities/universities", {
         method: "POST",
@@ -207,10 +166,8 @@ export function AddUniversityForm() {
         },
         body: JSON.stringify(payload),
       })
-
       const result = await response.json()
       console.log("API Response:", result)
-
       if (response.ok) {
         setTimeout(() => {
           setIsLoading(false)
@@ -218,8 +175,6 @@ export function AddUniversityForm() {
             title: "Success",
             description: "University has been added successfully.",
           })
-          
-          // FIXED: Resetting the state to match the corrected structure.
           setFormData({
             fullName: "",
             shortName: "",
@@ -257,15 +212,19 @@ export function AddUniversityForm() {
       console.error("Error Details:", error)
     }
   }
-  
+
   const programStats = {
     bachelors: programs.filter((p) => p.degree === "Bachelors").length,
     masters: programs.filter((p) => p.degree.includes("Masters") || p.degree.includes("MPhil")).length,
     phd: programs.filter((p) => p.degree === "PhD").length,
   }
 
+  const allFieldsFilled = formData.fullName && formData.shortName && formData.sector && formData.fieldOfStudy &&
+    formData.city && formData.websiteUrl && formData.applyUrl && formData.email && formData.phone &&
+    formData.address && formData.about && formData.photo
+
   return (
-    <div className="space-y-6 bg-white">
+    <div className=" bg-white">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-gray-100">
           <TabsTrigger value="basic" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8]">
@@ -307,6 +266,7 @@ export function AddUniversityForm() {
                         accept="image/*"
                         onChange={handleFileSelect}
                         className="hidden"
+                        required
                       />
                       <Button
                         type="button"
@@ -340,18 +300,22 @@ export function AddUniversityForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="sector" className="text-black">Sector</Label>
-                    <Select value={formData.sector} onValueChange={(value) => handleInputChange("sector", value)} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select sector eg Government" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Public">Government</SelectItem>
-                        <SelectItem value="Private">Private</SelectItem>
-                        <SelectItem value="Community">Semi Government</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+  <Label htmlFor="sector" className="text-black">Sector</Label>
+  <Select
+    value={formData.sector}
+    onValueChange={(value) => handleInputChange("sector", value)}
+    required
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select sector" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="Public">Government</SelectItem>
+      <SelectItem value="Private">Private</SelectItem>
+      <SelectItem value="Community">Semi Government</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
                   <div className="space-y-2">
                     <Label htmlFor="applyUrl" className="text-black">Apply Url</Label>
                     <Input
@@ -362,24 +326,24 @@ export function AddUniversityForm() {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="fieldOfStudy" className="text-black">Field of Study</Label>
-                    <Select
-                      value={formData.fieldOfStudy}
-                      onValueChange={(value) => handleInputChange("fieldOfStudy", value)}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select field of study eg Business" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="engineering">Engineering</SelectItem>
-                        <SelectItem value="medical">Medical</SelectItem>
-                        <SelectItem value="arts">Arts</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                 <div className="space-y-2">
+  <Label htmlFor="fieldOfStudy" className="text-black">Field of Study</Label>
+  <Select
+    value={formData.fieldOfStudy}
+    onValueChange={(value) => handleInputChange("fieldOfStudy", value)}
+    required
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select field of study" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="business">Business</SelectItem>
+      <SelectItem value="engineering">Engineering</SelectItem>
+      <SelectItem value="medical">Medical</SelectItem>
+      <SelectItem value="arts">Arts</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-black">Email</Label>
                     <Input
@@ -391,20 +355,24 @@ export function AddUniversityForm() {
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-black">City</Label>
-                    <Select value={formData.city} onValueChange={(value) => handleInputChange("city", value)} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="select city" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Lahore">Lahore</SelectItem>
-                        <SelectItem value="Karachi">Karachi</SelectItem>
-                        <SelectItem value="Islamabad">Islamabad</SelectItem>
-                        <SelectItem value="Taxila">Taxila</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                 <div className="space-y-2">
+  <Label htmlFor="city" className="text-black">City</Label>
+  <Select
+    value={formData.city}
+    onValueChange={(value) => handleInputChange("city", value)}
+    required
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select city" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="Lahore">Lahore</SelectItem>
+      <SelectItem value="Karachi">Karachi</SelectItem>
+      <SelectItem value="Islamabad">Islamabad</SelectItem>
+      <SelectItem value="Taxila">Taxila</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-black">Phone</Label>
                     <Input
@@ -438,13 +406,12 @@ export function AddUniversityForm() {
                     required
                   />
                 </div>
-
                 <div className="flex items-center justify-end space-x-4 pt-6">
                   <Button
                     type="button"
                     className="bg-[#5C5FC8] hover:bg-blue-400"
                     onClick={() => setActiveTab("programs")}
-                    disabled={!formData.fullName || !formData.shortName || !formData.sector || !formData.city || !formData.websiteUrl || !formData.applyUrl || !formData.email || !formData.phone || !formData.address || !formData.about || !formData.photo}
+                    disabled={!allFieldsFilled}
                   >
                     Next Programs
                   </Button>
@@ -550,12 +517,12 @@ export function AddUniversityForm() {
           <Card>
             <div className="p-6 text-black">
               <div className="space-y-6">
-                <Tabs defaultValue="bachelors" className="w-full">
+                <Tabs defaultValue={programs.some(p => p.degree === "Bachelors") ? "bachelors" : programs.some(p => p.degree.includes("Masters") || p.degree.includes("MPhil")) ? "masters" : programs.some(p => p.degree === "PhD") ? "phd" : "bachelors"} className="w-full">
                   <TabsList className="bg-gray-100 w-full justify-start">
                     <TabsTrigger value="bachelors" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
-                    <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>Masters</TabsTrigger>
-                    <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>MPhil</TabsTrigger>
-                    <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1" disabled>PhD</TabsTrigger>
+                    <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Masters</TabsTrigger>
+                    <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">MPhil</TabsTrigger>
+                    <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">PhD</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 <div className="space-y-4">

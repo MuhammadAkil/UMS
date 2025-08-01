@@ -1,4 +1,3 @@
-// add-program-drawer.tsx
 "use client"
 
 import type React from "react"
@@ -38,7 +37,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
   const { toast } = useToast()
   const [formData, setFormData] = useState({
     degree: "",
-    programName: "",
+    programNamestype: "",
     duration: "",
     feePerSemester: "",
     deadline: "",
@@ -67,74 +66,17 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate required fields
-    const requiredFields = [
-      { key: "degree", label: "Degree" },
-      { key: "programName", label: "Program Name" },
-      { key: "duration", label: "Duration" },
-      { key: "feePerSemester", label: "Fee per Semester" },
-      { key: "deadline", label: "Deadline" },
-      { key: "admissionStatus", label: "Admission Status" },
-      { key: "lastYearMerit", label: "Last Year Merit" },
-    ]
-
-    for (const field of requiredFields) {
-      if (!formData[field.key as keyof typeof formData]) {
-        toast({
-          title: "Error",
-          description: `${field.label} is required.`,
-          variant: "destructive",
-        })
-        return
-      }
-    }
-
-    // Validate deadline format
-    const deadlineRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!deadlineRegex.test(formData.deadline)) {
-      toast({
-        title: "Error",
-        description: "Deadline must be in YYYY-MM-DD format (e.g., 2024-07-15)",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Validate lastYearMerit format
-    const meritRegex = /^\d+\.\d+%$/ // Must be like "80.0%"
-    if (!meritRegex.test(formData.lastYearMerit)) {
-      toast({
-        title: "Error",
-        description: "Last Year Merit must be in the format '80.0%'.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Validate feePerSemester as a number
-    if (isNaN(parseInt(formData.feePerSemester))) {
-      toast({
-        title: "Error",
-        description: "Fee per Semester must be a valid number.",
-        variant: "destructive",
-      })
-      return
-    }
-
     const programData = {
       name: formData.programName,
       degree: formData.degree,
       deadline: formData.deadline,
       merit: formData.lastYearMerit,
-      fee: parseInt(formData.feePerSemester).toString(),
+      fee: formData.feePerSemester,
       duration: formData.duration,
       status: formData.admissionStatus,
     }
 
-    console.log("Program data being passed to onAdd:", programData) // Debugging
-
     onAdd(programData)
-
     setFormData({
       degree: "",
       programName: "",
@@ -152,21 +94,24 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="ml-auto w-96 bg-white h-full shadow-xl relative">
-        <div className="relative p-4 border-b">
+      <div className="ml-auto w-96 bg-white h-full shadow-xl relative p-0">
+        <div className="p-4 border-b relative">
           <h2 className="text-lg font-semibold text-black">{isEdit ? "Edit Program" : "Add Program"}</h2>
-          <p className="text-sm text-gray-600 mb-2 mt-2">Fill in the details for this program</p>
+          <p className="text-sm text-gray-600 mb-2 mt-0">Fill in the details for this program</p>
           <Button variant="ghost" size="sm" className="absolute top-4 right-4 bg-gray-400" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto h-[calc(100%-60px)]">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="degree" className="text-black">Degree</Label>
-              <Select value={formData.degree} onValueChange={(value) => handleInputChange("degree", value)}>
+              <Select
+                value={formData.degree}
+                onValueChange={(value) => handleInputChange("degree", value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Bachelors" />
+                  <SelectValue placeholder="Select degree" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Bachelors">Bachelors</SelectItem>
@@ -188,9 +133,12 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
             </div>
             <div className="space-y-2">
               <Label htmlFor="duration" className="text-black">Duration</Label>
-              <Select value={formData.duration} onValueChange={(value) => handleInputChange("duration", value)}>
+              <Select
+                value={formData.duration}
+                onValueChange={(value) => handleInputChange("duration", value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="4 Years" />
+                  <SelectValue placeholder="Select duration" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="2 Years">2 Years</SelectItem>
@@ -225,10 +173,9 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
               <Select
                 value={formData.admissionStatus}
                 onValueChange={(value) => handleInputChange("admissionStatus", value as "Open" | "Closed")}
-                required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Open" />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Open">Open</SelectItem>
@@ -241,8 +188,8 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
               <Input
                 id="lastYearMerit"
                 placeholder="80.0%"
-                value={formData.lastYearMerit || ""}
-                onChange={(e) => setFormData({ ...formData, lastYearMerit: e.target.value })}
+                value={formData.lastYearMerit}
+                onChange={(e) => handleInputChange("lastYearMerit", e.target.value)}
                 required
               />
             </div>
