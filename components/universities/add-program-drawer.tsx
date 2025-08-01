@@ -1,29 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface AddProgramDrawerProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
   onAdd: (program: {
-    name: string
-    degree: string
-    deadline: string
-    merit: string
-    fee: string
-    duration: string
-    status: "Open" | "Closed"
-  }) => void
+    name: string;
+    degree: string;
+    deadline: string;
+    merit: string;
+    fee: string;
+    duration: string;
+    status: "Open" | "Closed";
+  }) => void;
 }
 
-export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps) {
+export function AddProgramDrawer({
+  open,
+  onClose,
+  onAdd,
+}: AddProgramDrawerProps) {
   const [formData, setFormData] = useState({
     degree: "",
     programName: "",
@@ -32,14 +42,14 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
     deadline: "",
     admissionStatus: "Open" as "Open" | "Closed",
     lastYearMerit: "",
-  })
+  });
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     onAdd({
       name: formData.programName,
       degree: formData.degree,
@@ -48,7 +58,7 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
       fee: formData.feePerSemester,
       duration: formData.duration,
       status: formData.admissionStatus,
-    })
+    });
 
     // Reset form
     setFormData({
@@ -59,56 +69,79 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
       deadline: "",
       admissionStatus: "Open",
       lastYearMerit: "",
-    })
-  }
+    });
+  };
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-50 flex -mt-0">
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="ml-auto w-96 bg-white h-full shadow-xl relative">
-       <div className="relative p-4 border-b">
-  <h2 className="text-lg font-semibold text-black">Add Program</h2>
-  <p className="text-sm text-gray-600 mb-2 mt-2">Fill in the details for this program</p>
-  <Button variant="ghost" size="sm" className="absolute top-4 right-4 bg-gray-400" onClick={onClose}>
-    <X className="w-4 h-4" />
-  </Button>
-</div>
+      <div className="ml-auto w-96 bg-white h-full shadow-xl relative ">
+        <div className="relative p-4 border-b shrink-0">
+          <h2 className="text-lg font-semibold text-black">Add Program</h2>
+          <p className="text-sm text-gray-600 mb-2 mt-2">
+            Fill in the details for this program
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-4 right-4 bg-gray-100"
+            onClick={onClose}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
 
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto grow h-[84%] ">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="degree" className="text-black">Degree</Label>
-              <Select value={formData.degree} onValueChange={(value) => handleInputChange("degree", value)}>
+              <Label htmlFor="degree" className="text-black">
+                Degree
+              </Label>
+              <Select
+                value={formData.degree}
+                onValueChange={(value) => handleInputChange("degree", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Bachelors" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Bachelors">Bachelors</SelectItem>
                   <SelectItem value="Masters">Masters</SelectItem>
-                  <SelectItem value="Masters (MPhil)">Masters (MPhil)</SelectItem>
+                  <SelectItem value="Masters (MPhil)">
+                    Masters (MPhil)
+                  </SelectItem>
                   <SelectItem value="PhD">PhD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="programName" className="text-black">Program name</Label>
+              <Label htmlFor="programName" className="text-black">
+                Program name
+              </Label>
               <Input
                 id="programName"
                 placeholder="Computer Science"
                 value={formData.programName}
-                onChange={(e) => handleInputChange("programName", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("programName", e.target.value)
+                }
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="duration" className="text-black">Duration</Label>
-              <Select value={formData.duration} onValueChange={(value) => handleInputChange("duration", value)}>
+              <Label htmlFor="duration" className="text-black">
+                Duration
+              </Label>
+              <Select
+                value={formData.duration}
+                onValueChange={(value) => handleInputChange("duration", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="4 Years" />
                 </SelectTrigger>
@@ -122,17 +155,23 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="feePerSemester" className="text-black">Fee per Semester</Label>
+              <Label htmlFor="feePerSemester" className="text-black">
+                Fee per Semester
+              </Label>
               <Input
                 id="feePerSemester"
                 placeholder="150000 Rs"
                 value={formData.feePerSemester}
-                onChange={(e) => handleInputChange("feePerSemester", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("feePerSemester", e.target.value)
+                }
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline" className="text-black">Deadline</Label>
+              <Label htmlFor="deadline" className="text-black">
+                Deadline
+              </Label>
               <Input
                 id="deadline"
                 placeholder="15 may 2026"
@@ -142,10 +181,17 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="admissionStatus" className="text-black">Admission Status</Label>
+              <Label htmlFor="admissionStatus" className="text-black">
+                Admission Status
+              </Label>
               <Select
                 value={formData.admissionStatus}
-                onValueChange={(value) => handleInputChange("admissionStatus", value as "Open" | "Closed")}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "admissionStatus",
+                    value as "Open" | "Closed"
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Open" />
@@ -158,12 +204,16 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastYearMerit" className="text-black">Last Year Merit</Label>
+              <Label htmlFor="lastYearMerit" className="text-black">
+                Last Year Merit
+              </Label>
               <Input
                 id="lastYearMerit"
                 placeholder="617%"
                 value={formData.lastYearMerit}
-                onChange={(e) => handleInputChange("lastYearMerit", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("lastYearMerit", e.target.value)
+                }
               />
             </div>
 
@@ -179,5 +229,5 @@ export function AddProgramDrawer({ open, onClose, onAdd }: AddProgramDrawerProps
         </div>
       </div>
     </div>
-  )
+  );
 }
