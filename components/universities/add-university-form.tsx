@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Upload, Plus, Trash2, Edit, Loader2 } from "lucide-react"
+import { Upload, Plus, Trash2, Edit, Loader2, X } from "lucide-react" // Added X import
 import { useToast } from "@/hooks/use-toast"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
@@ -69,6 +69,9 @@ export function AddUniversityForm() {
     { type: "Test", value: "" },
   ])
   const [testTypes, setTestTypes] = useState<string[]>([])
+  const [showAddFieldModal, setShowAddFieldModal] = useState(false)
+  const [newField, setNewField] = useState({ type: "", value: "" })
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const initialValues = {
@@ -129,6 +132,26 @@ export function AddUniversityForm() {
       return newTestTypes
     })
   }
+
+function ProgressBar({ percentage }: { percentage: number }) {
+  return (
+    <div className="space-y-2">
+      {/* Header with percentage and max value */}
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-gray-700 font-medium">Total Percentage: {percentage}%</span>
+        <span className="text-red-500 font-medium">Max equal 100%</span>
+      </div>
+
+      {/* Progress bar container */}
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div
+          className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  )
+}
 
   const handleSubmit = async (values: typeof initialValues) => {
     setIsLoading(true)
@@ -207,6 +230,21 @@ export function AddUniversityForm() {
     bachelors: programs.filter((p) => p.degree === "Bachelors").length,
     masters: programs.filter((p) => p.degree.includes("Masters") || p.degree.includes("MPhil")).length,
     phd: programs.filter((p) => p.degree === "PhD").length,
+  }
+
+  const handleAddField = () => {
+    if (newField.type && newField.value) {
+      setWeightages((prev) => [...prev, { type: newField.type, value: newField.value }])
+      setNewField({ type: "", value: "" })
+      setShowAddFieldModal(false)
+      toast({ title: "Success", description: "Field added successfully." })
+    }
+  }
+
+  const handleConfirmDelete = (index: number) => {
+    setWeightages((prev) => prev.filter((_, i) => i !== index))
+    setShowDeleteConfirm(null)
+    toast({ title: "Success", description: "Field deleted successfully." })
   }
 
   return (
@@ -526,16 +564,22 @@ export function AddUniversityForm() {
                 <Card>
                   <div className="p-6 text-black">
                     <div className="space-y-6">
-                      <Tabs defaultValue={programs.some(p => p.degree === "Bachelors") ? "bachelors" : programs.some(p => p.degree.includes("Masters") || p.degree.includes("MPhil")) ? "masters" : programs.some(p => p.degree === "PhD") ? "phd" : "bachelors"} className="w-full">
+                      <Tabs defaultValue="bachelors" className="w-full">
                         <TabsList className="bg-gray-100 w-full justify-start">
                           <TabsTrigger value="bachelors" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
                           <TabsTrigger value="masters" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Masters</TabsTrigger>
                           <TabsTrigger value="mphil" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">MPhil</TabsTrigger>
                           <TabsTrigger value="phd" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">PhD</TabsTrigger>
                         </TabsList>
-                      </Tabs>
-                      <div className="space-y-4">
-                        <h3 className="font-semibold">Admission Test Type</h3>
+
+                         <div className="bg-gray-200  p-4 mt-6 rounded-lg flex items-center justify-between">
+                          <div className="w-[1500px]">
+        <ProgressBar percentage={75} />
+      </div>
+                      </div>
+
+                                              <div className="py-6">
+                        <h3 className="font-semibold pb-6">Admission Test Type</h3>
                         <div className="grid grid-cols-6 gap-4">
                           <div className="space-y-2 col-span-2">
                             <div className="flex items-center space-x-2">
@@ -592,38 +636,370 @@ export function AddUniversityForm() {
                             </div>
                           </div>
                         </div>
-                        <ErrorMessage name="admissionTestType" component="div" className="text-red-500 text-sm" />
-                      </div>
-                      {weightages.map((weightage, index) => (
-                        <div key={index} className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <Label>{weightage.type} Weightage</Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Field
-                              as={Input}
-                              name={`weightages[${index}].value`}
-                              placeholder="0%"
-                              value={weightage.value}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const newWeightages = [...weightages]
-                                newWeightages[index] = { type: weightage.type, value: e.target.value }
-                                setWeightages(newWeightages)
-                                setFieldValue(`weightages[${index}].value`, e.target.value)
-                              }}
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 border border-gray-300 rounded-md px-4 py-5"
-                              onClick={() => handleDeleteWeightage(index)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <ErrorMessage name={`weightages[${index}].value`} component="div" className="text-red-500 text-sm" />
+                        <ErrorMessage name="admissionTestType" component="div" className="text-red-500 py-2 text-sm" />
                         </div>
-                      ))}
+
+                                        
+                        
+                        <TabsContent value="bachelors">
+                          <div className="space-y-4">
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Matric Weightage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[0].value"
+                                  placeholder="0%"
+                                  value={weightages[0]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[0] = { type: "Matric", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[0].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[0].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>FSC Weightage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[1].value"
+                                  placeholder="0%"
+                                  value={weightages[1]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[1] = { type: "FSC", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[1].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[1].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Test Weightage (%)</Label>
+                              <Field
+                                as={Input}
+                                name="weightages[2].value"
+                                placeholder="0%"
+                                value={weightages[2]?.value || ""}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                  const newWeightages = [...weightages]
+                                  newWeightages[2] = { type: "Test", value: e.target.value }
+                                  setWeightages(newWeightages)
+                                  setFieldValue("weightages[2].value", e.target.value)
+                                }}
+                              />
+                              <ErrorMessage name="weightages[2].value" component="div" className="text-red-500 text-sm" />
+                            </div>
+                          </div>
+                        </TabsContent>
+                        <TabsContent value="masters">
+                          <div className="space-y-4">
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Bachelor's CGPA/Percentage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[0].value"
+                                  placeholder="0%"
+                                  value={weightages[0]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[0] = { type: "Bachelor's CGPA/Percentage", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[0].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[0].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Entry Test Weightage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[1].value"
+                                  placeholder="0%"
+                                  value={weightages[1]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[1] = { type: "Entry Test", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[1].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[1].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Interview Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[2].value"
+                                  placeholder="0%"
+                                  value={weightages[2]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[2] = { type: "Interview", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[2].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[2].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Interview Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[3].value"
+                                  placeholder="0%"
+                                  value={weightages[3]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[3] = { type: "Interview", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[3].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[3].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                        <TabsContent value="mphil">
+                          <div className="space-y-4">
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Master's CGPA/Percentage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[0].value"
+                                  placeholder="0%"
+                                  value={weightages[0]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[0] = { type: "Master's CGPA/Percentage", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[0].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[0].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Entry Test Weightage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[1].value"
+                                  placeholder="0%"
+                                  value={weightages[1]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[1] = { type: "Entry Test", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[1].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[1].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Interview Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[2].value"
+                                  placeholder="0%"
+                                  value={weightages[2]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[2] = { type: "Interview", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[2].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[2].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Research Proposal Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[3].value"
+                                  placeholder="0%"
+                                  value={weightages[3]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[3] = { type: "Research Proposal", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[3].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[3].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                        <TabsContent value="phd">
+                          <div className="space-y-4">
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Master's CGPA/Percentage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[0].value"
+                                  placeholder="0%"
+                                  value={weightages[0]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[0] = { type: "Master's CGPA/Percentage", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[0].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[0].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Entry Test Weightage (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[1].value"
+                                  placeholder="0%"
+                                  value={weightages[1]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[1] = { type: "Entry Test", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[1].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[1].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                            <div className="flex space-x-4">
+                              <div className="space-y-2 flex-1">
+                                <Label>Interview Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[2].value"
+                                  placeholder="0%"
+                                  value={weightages[2]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[2] = { type: "Interview", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[2].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[2].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                              <div className="space-y-2 flex-1">
+                                <Label>Research Proposal Weightage (Optional) (%)</Label>
+                                <Field
+                                  as={Input}
+                                  name="weightages[3].value"
+                                  placeholder="0%"
+                                  value={weightages[3]?.value || ""}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const newWeightages = [...weightages]
+                                    newWeightages[3] = { type: "Research Proposal", value: e.target.value }
+                                    setWeightages(newWeightages)
+                                    setFieldValue("weightages[3].value", e.target.value)
+                                  }}
+                                />
+                                <ErrorMessage name="weightages[3].value" component="div" className="text-red-500 text-sm" />
+                              </div>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                      {weightages.map((weightage, index) => (
+    weightage.value && (
+      <div key={index} className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label>{weightage.type} Weightage</Label>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-600"
+            onClick={() => setShowDeleteConfirm(index)}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Field
+            as={Input}
+            name={`weightages[${index}].value`}
+            placeholder="0%"
+            value={weightage.value}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const newWeightages = [...weightages];
+              newWeightages[index] = { type: weightage.type, value: e.target.value };
+              setWeightages(newWeightages);
+              setFieldValue(`weightages[${index}].value`, e.target.value);
+            }}
+          />
+        </div>
+        <ErrorMessage name={`weightages[${index}].value`} component="div" className="text-red-500 text-sm" />
+      </div>
+    )
+  ))}
+                      <div className="flex justify-end mb-4">
+                        <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={() => setShowAddFieldModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" /> Add Field
+                        </Button>
+                      </div>
+                      {showAddFieldModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <h3 className="text-lg font-semibold">Add Field</h3>
+                              <Button variant="ghost" onClick={() => setShowAddFieldModal(false)}>
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="space-y-4 mt-4">
+                              <div className="space-y-2">
+                                <Label>Field Name</Label>
+                                <Input
+                                  value={newField.type}
+                                  onChange={(e) => setNewField({ ...newField, type: e.target.value })}
+                                  placeholder="e.g., Extra Weightage"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Percentage (%)</Label>
+                                <Input
+                                  value={newField.value}
+                                  onChange={(e) => setNewField({ ...newField, value: e.target.value })}
+                                  placeholder="0%"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end space-x-2 mt-4">
+                              <Button className="bg-white" variant="outline" onClick={() => setShowAddFieldModal(false)}>Cancel</Button>
+                              <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={handleAddField}>Save</Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {showDeleteConfirm !== null && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <h3 className="text-lg font-semibold text-red-600">Delete Field</h3>
+                              <Button variant="ghost" onClick={() => setShowDeleteConfirm(null)}>
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <p className="mt-4">Are you sure you want to delete this field?</p>
+                            <div className="flex justify-end space-x-2 mt-4">
+                              <Button className="bg-white" variant="outline" onClick={() => setShowDeleteConfirm(null)}>Cancel</Button>
+                              <Button className="bg-red-600 hover:bg-red-700" onClick={() => handleConfirmDelete(showDeleteConfirm)}>Confirm</Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between pt-6">
                         <Button className="bg-transparent" variant="outline" onClick={() => setActiveTab("programs")}>
                           Previous
