@@ -9,7 +9,7 @@ const actions = [
     description: "Create a new university profile",
     icon: Plus,
     href: "/dashboard/universities/add",
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-blue-50 text-[#5C5FC8]",
   },
   {
     title: "Bulk Upload",

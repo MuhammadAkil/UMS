@@ -6,7 +6,7 @@ import { useState, useCallback, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Upload, Download, FileText, CheckCircle, X } from "lucide-react"
+import { Upload, Download, FileText, CheckCircle, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useUniversityStore } from "@/lib/store/university-store"
 
@@ -86,47 +86,46 @@ export function BulkUploadForm() {
     setUploadProgress(0)
     setUploadComplete(false)
 
-    // Clear any existing interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-
-    // Simulate upload progress
-    intervalRef.current = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-          }
-          return 100
-        }
-        return prev + 10
-      })
-    }, 200)
+    const formData = new FormData()
+    formData.append("file", file)
 
     try {
-      await bulkUploadUniversities(file)
+      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
+      const response = await fetch(`${backendUrl}/api/universities/bulk-upload`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8",
+        },
+      })
 
-      setTimeout(() => {
-        setUploading(false)
-        setUploadComplete(true)
-        toast({
-          title: "Upload Complete",
-          description: "Universities have been uploaded successfully.",
-        })
-      }, 2000)
-    } catch (error) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+      const result = await response.json()
+
+      if (response.ok) {
+        setTimeout(() => {
+          setUploading(false)
+          setUploadComplete(true)
+          toast({
+            title: "Upload Successful",
+            description: "Universities have been uploaded successfully.",
+          })
+        }, 1000)
+      } else {
+        throw new Error(result.message || "Failed to upload universities.")
       }
+    } catch (error) {
       setUploading(false)
       toast({
         title: "Upload Failed",
-        description: "Failed to upload universities.",
+        description: error.message || "Failed to upload universities.",
         variant: "destructive",
       })
+    } finally {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
     }
-  }, [file, bulkUploadUniversities, toast])
+  }, [file, toast])
 
   const handleReset = useCallback(() => {
     setFile(null)
@@ -138,27 +137,26 @@ export function BulkUploadForm() {
     }
   }, [])
 
-  const downloadTemplate = useCallback(() => {
-    // Create CSV template
-    const csvContent = `University Name,University Code,Type,City,Country,Email,Phone,Website,Description
-Harvard University,HARV,Private,Cambridge,USA,info@harvard.edu,+1-617-495-1000,https://harvard.edu,Harvard University is a private Ivy League research university
-Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,https://stanford.edu,Stanford University is a private research university`
+const downloadTemplate = useCallback(() => {
+  const csvContent = `university_full_name,university_short_name,sector,field_of_study,City,address,about,logo_url,website_url,apply_url,email,phone,program_name,degree_level,application_deadline,last_year_merit,duration,fee_per_semester,admission_status
+National University of Sciences and Technology,NUST,Public,Engineering,Islamabad,Sector H-12 Islamabad,NUST is one of the top-ranked universities in Pakistan.,https://yourdomain.com/logos/nust.png,https://nust.edu.pk,https://admissions.nust.edu.pk,info@nust.edu.pk,051-111-116-878,BS Computer Science,Bachelors,2025-07-15,80.0%,4 Years,PKR 100000,Open
+University of the Punjab,PU,Public,Arts and Humanities,Islamabad,Quaid-e-Azam Campus Lahore,One of the oldest and largest universities in Pakistan.,https://yourdomain.com/logos/pu.png,http://pu.edu.pk,http://admissions.pu.edu.pk,info@pu.edu.pk,042-111-001-882,BS Computer Science,Bachelors,2025-07-15,80.0%,4 Years,PKR 100000,Open`
 
-    const blob = new Blob([csvContent], { type: "text/csv" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "university_template.csv"
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "university_management_template.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 
-    toast({
-      title: "Template Downloaded",
-      description: "CSV template has been downloaded successfully.",
-    })
-  }, [toast])
+  toast({
+    title: "Template Downloaded",
+    description: "CSV template has been downloaded successfully.",
+  });
+}, [toast])
 
   return (
     <div className="space-y-6">
@@ -179,7 +177,7 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
             {!file && !uploadComplete && (
               <div
                 className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                  dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
+                  dragActive ? "border-[#5C5FC8] bg-blue-50" : "border-gray-300"
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -191,7 +189,7 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
                   Drop your CSV file here, or{" "}
                   <button
                     type="button"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-[#5C5FC8] hover:text-blue-700"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     browse
@@ -206,7 +204,7 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <FileText className="w-8 h-8 text-blue-600" />
+                    <FileText className="w-8 h-8 text-[#5C5FC8]" />
                     <div>
                       <p className="font-medium">{file.name}</p>
                       <p className="text-sm text-gray-600">{(file.size / 1024).toFixed(1)} KB</p>
@@ -218,12 +216,9 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
                 </div>
 
                 {uploading && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Uploading...</span>
-                      <span className="text-sm text-gray-600">{uploadProgress}%</span>
-                    </div>
-                    <Progress value={uploadProgress} className="w-full" />
+                  <div className="flex items-center justify-center space-y-2">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#5C5FC8]" />
+                    <span className="text-sm font-medium">Uploading...</span>
                   </div>
                 )}
 
@@ -231,7 +226,7 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
                   <Button variant="outline" onClick={handleReset} disabled={uploading}>
                     Cancel
                   </Button>
-                  <Button onClick={handleUpload} disabled={uploading} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={handleUpload} disabled={uploading} className="bg-[#5C5FC8] hover:bg-blue-700">
                     {uploading ? "Uploading..." : "Upload Universities"}
                   </Button>
                 </div>
@@ -245,7 +240,7 @@ Stanford University,STAN,Private,Stanford,USA,info@stanford.edu,+1-650-723-2300,
                 <p className="text-gray-600 mb-6">
                   Your universities have been successfully uploaded and are now being processed.
                 </p>
-                <Button onClick={handleReset} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleReset} className="bg-[#5C5FC8] hover:bg-blue-700">
                   Upload Another File
                 </Button>
               </div>

@@ -17,7 +17,7 @@ export default function UniversitiesPage() {
     <div className="bg-gray-50 min-h-screen">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="mb-8 border border-[hsl(var(--border))] rounded-md p-8">
+        <div className="mb-8 bg-white border border-[hsl(var(--border))] rounded-md p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">University Management</h1>
           
           {/* Navigation Tabs */}
@@ -26,7 +26,7 @@ export default function UniversitiesPage() {
               <button
                 className={`py-2 px-1 border-b-2 whitespace-nowrap text-sm font-medium transition-colors duration-200 ${
                   activeTab === 'add'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-[#5C5FC8] text-[#5C5FC8]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => handleTabClick('add')}
@@ -37,7 +37,7 @@ export default function UniversitiesPage() {
               <button
                 className={`py-2 px-1 border-b-2 whitespace-nowrap text-sm font-medium transition-colors duration-200 ${
                   activeTab === 'bulk'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-[#5C5FC8] text-[#5C5FC8]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => handleTabClick('bulk')}
@@ -48,7 +48,7 @@ export default function UniversitiesPage() {
               <button
                 className={`py-2 px-1 border-b-2 whitespace-nowrap text-sm font-medium transition-colors duration-200 ${
                   activeTab === 'manage'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-[#5C5FC8] text-[#5C5FC8]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
                 onClick={() => handleTabClick('manage')}

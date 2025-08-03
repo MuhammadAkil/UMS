@@ -43,6 +43,7 @@
     "cmdk": "latest",
     "date-fns": "4.1.0",
     "embla-carousel-react": "latest",
+    "formik": "^2.4.6",
     "immer": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
@@ -59,6 +60,7 @@
     "tailwindcss-animate": "^1.0.7",
     "use-sync-external-store": "latest",
     "vaul": "latest",
+    "yup": "^1.7.0",
     "zod": "^3.24.1",
     "zustand": "latest"
   },

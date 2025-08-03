@@ -46,7 +46,7 @@ export function StatsCards() {
               </p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
-              <stat.icon className="w-6 h-6 text-blue-600" />
+              <stat.icon className="w-6 h-6 text-[#5C5FC8]" />
             </div>
           </div>
         </Card>
