@@ -1,33 +1,39 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Upload, Download, FileText, CheckCircle, X, Loader2 } from "lucide-react"
+import { Upload, Download, CheckCircle, AlertCircle, Loader2, FileText, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useUniversityStore } from "@/lib/store/university-store"
+import { universityAPI } from "@/lib/api/universities"
 
 export function BulkUploadForm() {
   const { toast } = useToast()
-  const { bulkUploadUniversities } = useUniversityStore()
-  const [dragActive, setDragActive] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0]
+    if (selectedFile) {
+      if (selectedFile.type === "text/csv" || selectedFile.name.endsWith(".csv")) {
+        setFile(selectedFile)
+        setUploadComplete(false)
+        setUploadProgress(0)
+      } else {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select a CSV file.",
+          variant: "destructive",
+        })
       }
     }
-  }, [])
+  }, [toast])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -39,45 +45,26 @@ export function BulkUploadForm() {
     }
   }, [])
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      setDragActive(false)
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
 
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        const droppedFile = e.dataTransfer.files[0]
-        if (droppedFile.type === "text/csv" || droppedFile.name.endsWith(".csv")) {
-          setFile(droppedFile)
-        } else {
-          toast({
-            title: "Invalid file type",
-            description: "Please upload a CSV file.",
-            variant: "destructive",
-          })
-        }
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0]
+      if (droppedFile.type === "text/csv" || droppedFile.name.endsWith(".csv")) {
+        setFile(droppedFile)
+        setUploadComplete(false)
+        setUploadProgress(0)
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a CSV file.",
+          variant: "destructive",
+        })
       }
-    },
-    [toast],
-  )
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-        const selectedFile = e.target.files[0]
-        if (selectedFile.type === "text/csv" || selectedFile.name.endsWith(".csv")) {
-          setFile(selectedFile)
-        } else {
-          toast({
-            title: "Invalid file type",
-            description: "Please upload a CSV file.",
-            variant: "destructive",
-          })
-        }
-      }
-    },
-    [toast],
-  )
+    }
+  }, [toast])
 
   const handleUpload = useCallback(async () => {
     if (!file) return
@@ -86,22 +73,10 @@ export function BulkUploadForm() {
     setUploadProgress(0)
     setUploadComplete(false)
 
-    const formData = new FormData()
-    formData.append("file", file)
-
     try {
-      const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
-      const response = await fetch(`${backendUrl}/api/universities/bulk-upload`, {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8",
-        },
-      })
+      const result = await universityAPI.bulkUploadUniversities(file)
 
-      const result = await response.json()
-
-      if (response.ok) {
+      if (result.success) {
         setTimeout(() => {
           setUploading(false)
           setUploadComplete(true)
@@ -117,7 +92,7 @@ export function BulkUploadForm() {
       setUploading(false)
       toast({
         title: "Upload Failed",
-        description: error.message || "Failed to upload universities.",
+        description: (error as Error).message || "Failed to upload universities.",
         variant: "destructive",
       })
     } finally {
@@ -196,7 +171,7 @@ University of the Punjab,PU,Public,Arts and Humanities,Islamabad,Quaid-e-Azam Ca
                   </button>
                 </h4>
                 <p className="text-sm text-gray-600">Supports: CSV files only</p>
-                <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileSelect} className="hidden" />
+                <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
               </div>
             )}
 

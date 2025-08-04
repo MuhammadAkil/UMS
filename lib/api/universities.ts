@@ -1,25 +1,8 @@
 // API utility functions for university management
-// This will be used when integrating with the actual backend
+import { BaseAPI, ApiResponse, PaginatedResponse } from "./base"
+import { authAPI } from "./auth"
 
-export interface ApiResponse<T> {
-  data: T
-  message: string
-  success: boolean
-}
-
-export interface PaginatedResponse<T> {
-  data: T[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
-}
-
-class UniversityAPI {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || "/api"
-
+class UniversityAPI extends BaseAPI {
   async getUniversities(params?: {
     page?: number
     limit?: number
@@ -35,101 +18,48 @@ class UniversityAPI {
     if (params?.type) searchParams.append("type", params.type)
     if (params?.status) searchParams.append("status", params.status)
 
-    const response = await fetch(`${this.baseUrl}/universities?${searchParams}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch universities: ${response.statusText}`)
-    }
-
-    return response.json()
+    const queryString = searchParams.toString()
+    const endpoint = `/universities${queryString ? `?${queryString}` : ""}`
+    
+    return this.get<PaginatedResponse<any>>(endpoint)
   }
 
-  async getUniversity(id: number): Promise<ApiResponse<any>> {
-    const response = await fetch(`${this.baseUrl}/universities/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch university: ${response.statusText}`)
-    }
-
-    return response.json()
+  async getUniversity(id: string): Promise<ApiResponse<any>> {
+    return this.get<ApiResponse<any>>(`/universities/${id}`)
   }
 
   async createUniversity(data: any): Promise<ApiResponse<any>> {
-    const response = await fetch(`${this.baseUrl}/universities`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to create university: ${response.statusText}`)
-    }
-
-    return response.json()
+    return this.post<ApiResponse<any>>("/universities", data)
   }
 
-  async updateUniversity(id: number, data: any): Promise<ApiResponse<any>> {
-    const response = await fetch(`${this.baseUrl}/universities/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to update university: ${response.statusText}`)
-    }
-
-    return response.json()
+  async updateUniversity(id: string, data: any): Promise<ApiResponse<any>> {
+    return this.put<ApiResponse<any>>(`/universities/${id}`, data)
   }
 
-  async deleteUniversity(id: number): Promise<ApiResponse<any>> {
-    const response = await fetch(`${this.baseUrl}/universities/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete university: ${response.statusText}`)
-    }
-
-    return response.json()
+  async deleteUniversity(id: string): Promise<ApiResponse<any>> {
+    return this.delete<ApiResponse<any>>(`/universities/${id}`)
   }
 
   async bulkUploadUniversities(file: File): Promise<ApiResponse<any>> {
     const formData = new FormData()
     formData.append("file", file)
 
-    const response = await fetch(`${this.baseUrl}/universities/bulk-upload`, {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to upload universities: ${response.statusText}`)
-    }
-
-    return response.json()
+    return this.upload<ApiResponse<any>>("/universities/bulk-upload", formData)
   }
 
   async exportUniversities(format: "csv" | "excel" = "csv"): Promise<Blob> {
-    const response = await fetch(`${this.baseUrl}/universities/export?format=${format}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+    const url = `${baseUrl}/universities/export?format=${format}`
+    const token = authAPI.getAccessToken()
+    
+    const headers: HeadersInit = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const response = await fetch(url, {
       method: "GET",
+      headers,
     })
 
     if (!response.ok) {

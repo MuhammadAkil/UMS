@@ -10,6 +10,10 @@ import { X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { format, parseISO } from "date-fns"
+
 
 interface AddProgramDrawerProps {
   open: boolean;
@@ -161,16 +165,28 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                   />
                   <ErrorMessage name="feePerSemester" component="div" className="text-red-500 text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deadline" className="text-black">Deadline</Label>
-                  <Field
-                    as={Input}
-                    id="deadline"
-                    name="deadline"
-                    placeholder="2024-07-15"
-                  />
-                  <ErrorMessage name="deadline" component="div" className="text-red-500 text-sm" />
-                </div>
+            <div className="space-y-2">
+  <Label htmlFor="deadline" className="text-black">Deadline</Label>
+  <div>
+    <Field name="deadline">
+      {({ field, form }: any) => (
+        <DatePicker
+          id="deadline"
+          selected={field.value ? parseISO(field.value) : null}
+          onChange={(date: Date) => {
+            const formatted = date ? format(date, "yyyy-MM-dd") : "";
+            form.setFieldValue("deadline", formatted);
+          }}
+          dateFormat="yyyy-MM-dd"
+          placeholderText="YYYY-MM-DD"
+          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      )}
+    </Field>
+  </div>
+  <ErrorMessage name="deadline" component="div" className="text-red-500 text-sm" />
+</div>
+
                 <div className="space-y-2">
                   <Label htmlFor="admissionStatus" className="text-black">Admission Status</Label>
                   <Field name="admissionStatus">

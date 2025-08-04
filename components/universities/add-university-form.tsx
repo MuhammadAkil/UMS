@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { AddProgramDrawer } from "./add-program-drawer"
+import { universityAPI } from "@/lib/api/universities"
 
 interface Program {
   id: number;
@@ -103,13 +104,14 @@ export function AddUniversityForm() {
     setShowAddProgram(true)
   }
 
-  const handleUpdateProgram = (updatedProgram: Program) => {
-    setPrograms((prev) =>
-      prev.map((p) => (p.id === (updatedProgram as any).id ? updatedProgram : p))
-    )
-    setEditProgram(null)
-    setShowAddProgram(false)
-    toast({ title: "Success", description: "Program updated successfully." })
+  const handleUpdateProgram = (programData: Omit<Program, "id">) => {
+    if (editProgram) {
+      const updatedProgram = { ...programData, id: editProgram.id }
+      setPrograms((prev) => prev.map((p) => (p.id === editProgram.id ? updatedProgram : p)))
+      setEditProgram(null)
+      setShowAddProgram(false)
+      toast({ title: "Success", description: "Program updated successfully." })
+    }
   }
 
   const handleDeleteProgram = (id: number) => {
@@ -155,24 +157,23 @@ function ProgressBar({ percentage }: { percentage: number }) {
 
   const handleSubmit = async (values: typeof initialValues) => {
     setIsLoading(true)
+    const formData = new FormData()
+    formData.append("photo", values.photo!)
+
     const payload = {
       fullName: values.fullName,
       shortName: values.shortName,
       sector: values.sector,
       fieldOfStudy: values.fieldOfStudy,
       city: values.city,
-      address: values.address,
-      about: values.about,
-      photo: values.photo ? "https://yourdomain.com/logo.png" : null,
       websiteUrl: values.websiteUrl,
       applyUrl: values.applyUrl,
       email: values.email,
       phone: values.phone,
+      address: values.address,
+      about: values.about,
       admissionTestType: values.admissionTestType,
-      weightages: values.weightages.map((w) => ({
-        type: w.type,
-        value: parseInt(w.value.replace("%", "")) || 0,
-      })),
+      weightages: values.weightages.filter((w) => w.value),
       programs: programs.map((p) => ({
         name: p.name,
         degree: p.degree,
@@ -186,17 +187,10 @@ function ProgressBar({ percentage }: { percentage: number }) {
 
     console.log("Formatted JSON Payload:", payload)
     try {
-      const response = await fetch("http://localhost:4000/api/universities/universities", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
-      const result = await response.json()
+      const result = await universityAPI.createUniversity(payload)
       console.log("API Response:", result)
-      if (response.ok) {
+      
+      if (result.success) {
         setTimeout(() => {
           setIsLoading(false)
           toast({
@@ -565,7 +559,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
               <TabsContent value="merit" className="mt-6">
                 <Card>
                   <div className="p-6 text-black">
-                    <div className="space-y-6">
+                    <div className="">
                       <Tabs defaultValue="bachelors" className="w-full">
                         <TabsList className="bg-gray-100 w-full justify-start">
                           <TabsTrigger value="bachelors" className="data-[state=active]:bg-white data-[state=active]:text-[#5C5FC8] flex-1">Bachelors</TabsTrigger>
@@ -946,8 +940,8 @@ function ProgressBar({ percentage }: { percentage: number }) {
       </div>
     )
   ))}
-                      <div className="flex justify-end mb-4">
-                        <Button className="bg-[#5C5FC8] hover:bg-[#5C5FC8]/80" onClick={() => setShowAddFieldModal(true)}>
+                      <div className="flex justify-end  mt-4 mb-4">
+                        <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={() => setShowAddFieldModal(true)}>
                           <Plus className="w-4 h-4 mr-2" /> Add Field
                         </Button>
                       </div>

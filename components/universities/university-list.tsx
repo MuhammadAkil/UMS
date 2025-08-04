@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Edit, Eye, Search, Filter, Trash2, Loader2, RotateCw } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Edit, Eye, Search, Filter, Trash2, Loader2, RotateCw, X } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { universityAPI } from "@/lib/api/universities"
 
 // --- Helper Types for API Data ---
 interface DegreeCounts {
@@ -17,7 +18,6 @@ interface DegreeCounts {
   masters: number
   phd: number
 }
-
 interface University {
   _id: string
   fullName: string
@@ -27,7 +27,6 @@ interface University {
   status: "confirmed" | "in_progress" | "deleted"
   degreeCounts: DegreeCounts
 }
-
 interface Filters {
   degree: string
   city: string
@@ -35,11 +34,6 @@ interface Filters {
   programRange: string
   admissionStatus: string
 }
-
-// --- API Configuration ---
-const API_BASE_URL = "http://localhost:4000/api/universities"
-const AUTH_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2M1ZTAwNTdhMTA3MWZjYWRkMzIzMyIsImlhdCI6MTc1MzYxNzAyMCwiZXhwIjoxNzU0OTEzMDIwfQ.XznS7qSVf6VcITApcnTBvJAiNT5X386UoOPGhTpTBz8"
 
 export function UniversityList() {
   const [universities, setUniversities] = useState<University[]>([])
@@ -59,30 +53,31 @@ export function UniversityList() {
     programRange: "",
     admissionStatus: "",
   })
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
   const fetchUniversities = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
-      const response = await fetch(`${API_BASE_URL}?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+      const result = await universityAPI.getUniversities({
+        page,
+        limit,
+        search: searchQuery || undefined,
       })
-      if (!response.ok) throw new Error(`Failed to fetch universities: ${response.statusText}`)
-      const result = await response.json()
+      
       const mappedData = (result.data || []).map((uni: any) => ({
         ...uni,
         status: uni.status === "active" ? "confirmed" : uni.status,
       }))
       setUniversities(mappedData)
-      setTotal(result.total || 0)
+      setTotal(result.pagination?.total || 0)
     } catch (err: any) {
       setError(err.message)
       toast({ title: "Error", description: err.message, variant: "destructive" })
     } finally {
       setLoading(false)
     }
-  }, [page, limit])
+  }, [page, limit, searchQuery])
 
   useEffect(() => {
     fetchUniversities()
@@ -93,18 +88,14 @@ export function UniversityList() {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch(`${API_BASE_URL}/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${AUTH_TOKEN}` },
-            body: JSON.stringify({ status: apiStatus }),
-          }),
+          universityAPI.updateUniversity(id, { status: apiStatus })
         ),
       )
       toast({ title: "Success", description: `Moved ${ids.length} universities.` })
-      setSelectedUniversities([])
       fetchUniversities()
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to update university status.", variant: "destructive" })
+      setSelectedUniversities([])
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" })
     }
   }
 
@@ -123,13 +114,14 @@ export function UniversityList() {
 
   const handlePermanentDelete = async () => {
     if (selectedUniversities.length === 0) return
+    if (!isDeleteConfirmOpen) {
+      setIsDeleteConfirmOpen(true)
+      return
+    }
     try {
       await Promise.all(
         selectedUniversities.map((id) =>
-          fetch(`${API_BASE_URL}/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
-          }),
+          universityAPI.deleteUniversity(id)
         ),
       )
       toast({ title: "Success", description: `${selectedUniversities.length} universities deleted permanently.` })
@@ -137,6 +129,8 @@ export function UniversityList() {
       fetchUniversities()
     } catch (err) {
       toast({ title: "Error", description: "Failed to delete universities.", variant: "destructive" })
+    } finally {
+      setIsDeleteConfirmOpen(false)
     }
   }
 
@@ -164,29 +158,21 @@ export function UniversityList() {
   }
 
   const applyFilters = (university: University) => {
-    // Apply degree filter
     if (filters.degree) {
       const hasSelectedDegree = university.degreeCounts[filters.degree.toLowerCase() as keyof DegreeCounts] > 0
       if (!hasSelectedDegree) return false
     }
-
-    // Apply city filter
     if (filters.city && !university.city.toLowerCase().includes(filters.city.toLowerCase())) {
       return false
     }
-
-    // Apply sector filter
     if (filters.sector && !university.sector.toLowerCase().includes(filters.sector.toLowerCase())) {
       return false
     }
-
-    // Apply program range filter
     if (filters.programRange) {
       const totalPrograms = Object.values(university.degreeCounts).reduce((a, b) => a + b, 0)
       const [min, max] = filters.programRange.split("-").map(Number)
       if (totalPrograms < min || totalPrograms > max) return false
     }
-
     return true
   }
 
@@ -194,10 +180,8 @@ export function UniversityList() {
     const matchesSearch =
       university.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       university.city.toLowerCase().includes(searchQuery.toLowerCase())
-
     if (!matchesSearch) return false
     if (!applyFilters(university)) return false
-
     switch (activeTab) {
       case "confirm":
         return university.status === "confirmed"
@@ -250,7 +234,7 @@ export function UniversityList() {
               )}
               {activeTab === "delete" && (
                 <Button variant="outline" className="bg-white" size="sm" onClick={handleRestore}>
-                  <RotateCw className="w-4  h-4 mr-2" />
+                  <RotateCw className="w-4 h-4 mr-2" />
                   Restore
                 </Button>
               )}
@@ -265,10 +249,38 @@ export function UniversityList() {
                   Delete
                 </Button>
               ) : (
-                <Button variant="destructive" size="sm" onClick={handlePermanentDelete}>
-                  <Trash2 className="w-4  h-4 mr-2" />
-                  Delete Permanently
-                </Button>
+                <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm" onClick={() => setIsDeleteConfirmOpen(true)}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Permanently
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] bg-white">
+                    <DialogHeader>
+                      <DialogTitle className="text-red-600">Delete Universities</DialogTitle>
+                    </DialogHeader>
+                    <p className="mt-2 text-gray-600">
+                      Are you sure you want to permanently delete {selectedUniversities.length}{" "}
+                      {selectedUniversities.length > 1 ? "universities" : "university"}? This action cannot be undone.
+                    </p>
+                    <DialogFooter>
+                        <Button
+                           className="text-black bg-white"
+                        variant="outline"
+                        onClick={() => setIsDeleteConfirmOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={handlePermanentDelete}
+                      >
+                        Confirm
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
             </div>
           )}
@@ -384,10 +396,6 @@ export function UniversityList() {
 
   return (
     <div className="space-y-6">
-      {/* Backdrop overlay */}
-      {isFilterOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-25 z-40" onClick={() => setIsFilterOpen(false)} />
-      )}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between">
           <TabsList className="bg-gray-100">
@@ -420,14 +428,10 @@ export function UniversityList() {
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0 shadow-lg border-0" align="end" sideOffset={8}>
                 <div className="bg-white rounded-lg">
-                  {/* Header */}
                   <div className="flex items-center justify-between px-6 py-2 border-b">
                     <h3 className="text-md font-semibold text-gray-900">Filters</h3>
                   </div>
-
-                  {/* Filter Content */}
                   <div className="px-6 py-4 space-y-6 max-h-96 overflow-y-auto">
-                    {/* Degree Filter */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-gray-900">Degree</label>
@@ -454,8 +458,6 @@ export function UniversityList() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* City Filter */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-gray-900">City</label>
@@ -484,8 +486,6 @@ export function UniversityList() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* Sector Filter */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-gray-900">Sector</label>
@@ -512,8 +512,6 @@ export function UniversityList() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* No of Programs Filter */}
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium text-gray-900">No of Programs</label>
@@ -543,34 +541,6 @@ export function UniversityList() {
                         </SelectContent>
                       </Select>
                     </div>
-
-                    {/* Admission Status Filter */}
-                    {/* <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-900">Admission Status</label>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => resetFilter("admissionStatus")}
-                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
-                        >
-                          Reset
-                        </Button>
-                      </div>
-                      <Select
-                        value={filters.admissionStatus}
-                        onValueChange={(value) => setFilters((prev) => ({ ...prev, admissionStatus: value }))}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="e.g Open" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="open">Open</SelectItem>
-                          <SelectItem value="closed">Closed</SelectItem>
-                          <SelectItem value="upcoming">Upcoming</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div> */}
                   </div>
                 </div>
               </PopoverContent>
