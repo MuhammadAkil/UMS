@@ -33,6 +33,12 @@ interface Filters {
   sector: string
   programRange: string
   admissionStatus: string
+  fieldOfStudy: string
+  courseType: string
+  degreeProgram: string
+  admissions: string
+  duration: string
+  programName: string
 }
 
 export function UniversityList() {
@@ -46,12 +52,20 @@ export function UniversityList() {
   const [activeTab, setActiveTab] = useState("confirm")
   const [searchQuery, setSearchQuery] = useState("")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [searchResults, setSearchResults] = useState<University[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     degree: "",
     city: "",
     sector: "",
     programRange: "",
     admissionStatus: "",
+    fieldOfStudy: "",
+    courseType: "",
+    degreeProgram: "",
+    admissions: "",
+    duration: "",
+    programName: "",
   })
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
@@ -78,6 +92,230 @@ export function UniversityList() {
       setLoading(false)
     }
   }, [page, limit, searchQuery])
+
+  // New search functions for specific filters
+  const searchByCity = async (city: string) => {
+    if (!city) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by city: ${city}`)
+      const result = await universityAPI.searchUniversitiesByCity(city)
+      console.log(`✅ City search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities in ${city}` })
+      } else {
+        toast({ title: "No Results", description: `No universities found in ${city}` })
+      }
+    } catch (err: any) {
+      console.error(`❌ City search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByFieldOfStudy = async (fieldOfStudy: string) => {
+    if (!fieldOfStudy) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by field of study: ${fieldOfStudy}`)
+      const result = await universityAPI.searchUniversitiesByFieldOfStudy(fieldOfStudy)
+      console.log(`✅ Field of study search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities for ${fieldOfStudy}` })
+      } else {
+        toast({ title: "No Results", description: `No universities found for ${fieldOfStudy}` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Field of study search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByCourseType = async (courseType: string) => {
+    if (!courseType) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by course type: ${courseType}`)
+      const result = await universityAPI.searchUniversitiesByCourseType(courseType)
+      console.log(`✅ Course type search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities for ${courseType}` })
+      } else {
+        toast({ title: "No Results", description: `No universities found for ${courseType}` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Course type search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByDegreeProgram = async (degreeProgram: string) => {
+    if (!degreeProgram) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by degree program: ${degreeProgram}`)
+      const result = await universityAPI.searchUniversitiesByDegreeProgram(degreeProgram)
+      console.log(`✅ Degree program search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities for ${degreeProgram}` })
+      } else {
+        toast({ title: "No Results", description: `No universities found for ${degreeProgram}` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Degree program search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByAdmissions = async (admissions: string) => {
+    if (!admissions) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by admissions status: ${admissions}`)
+      const result = await universityAPI.searchUniversitiesByAdmissions(admissions)
+      console.log(`✅ Admissions search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities with ${admissions} admissions` })
+      } else {
+        toast({ title: "No Results", description: `No universities found with ${admissions} admissions` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Admissions search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByDuration = async (duration: string) => {
+    if (!duration) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by duration: ${duration}`)
+      const result = await universityAPI.searchUniversitiesByDuration(duration)
+      console.log(`✅ Duration search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities with ${duration} programs` })
+      } else {
+        toast({ title: "No Results", description: `No universities found with ${duration} programs` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Duration search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const searchByProgramName = async (programName: string) => {
+    if (!programName) return
+    setIsSearching(true)
+    try {
+      console.log(`🔍 Searching universities by program name: ${programName}`)
+      const result = await universityAPI.searchUniversitiesByProgramName(programName)
+      console.log(`✅ Program name search result:`, result)
+      if (result.success) {
+        const mappedData = (result.data || []).map((uni: any) => ({
+          ...uni,
+          status: uni.status === "active" ? "confirmed" : uni.status,
+        }))
+        setSearchResults(mappedData)
+        setUniversities(mappedData)
+        toast({ title: "Success", description: `Found ${mappedData.length} universities with ${programName} programs` })
+      } else {
+        toast({ title: "No Results", description: `No universities found with ${programName} programs` })
+      }
+    } catch (err: any) {
+      console.error(`❌ Program name search error:`, err)
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Handle filter changes and trigger search
+  const handleFilterChange = async (filterKey: keyof Filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [filterKey]: value }))
+    
+    // Clear other filters when a new search is triggered
+    const newFilters = { ...filters, [filterKey]: value }
+    
+    // Trigger appropriate search based on filter
+    if (value) {
+      switch (filterKey) {
+        case 'city':
+          await searchByCity(value)
+          break
+        case 'fieldOfStudy':
+          await searchByFieldOfStudy(value)
+          break
+        case 'courseType':
+          await searchByCourseType(value)
+          break
+        case 'degreeProgram':
+          await searchByDegreeProgram(value)
+          break
+        case 'admissions':
+          await searchByAdmissions(value)
+          break
+        case 'duration':
+          await searchByDuration(value)
+          break
+        case 'programName':
+          await searchByProgramName(value)
+          break
+        default:
+          // For other filters, use the existing logic
+          break
+      }
+    } else {
+      // If filter is cleared, fetch all universities
+      fetchUniversities()
+    }
+  }
 
   useEffect(() => {
     fetchUniversities()
@@ -154,6 +392,12 @@ export function UniversityList() {
       sector: "",
       programRange: "",
       admissionStatus: "",
+      fieldOfStudy: "",
+      courseType: "",
+      degreeProgram: "",
+      admissions: "",
+      duration: "",
+      programName: "",
     })
   }
 
@@ -196,11 +440,13 @@ export function UniversityList() {
 
   const totalPages = Math.ceil(total / limit)
 
-  if (loading) {
+  if (loading || isSearching) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-        <span className="ml-2 text-gray-500">Loading universities...</span>
+        <span className="ml-2 text-gray-500">
+          {isSearching ? "Searching universities..." : "Loading universities..."}
+        </span>
       </div>
     )
   }
@@ -430,6 +676,14 @@ export function UniversityList() {
                 <div className="bg-white rounded-lg">
                   <div className="flex items-center justify-between px-6 py-2 border-b">
                     <h3 className="text-md font-semibold text-gray-900">Filters</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetAllFilters}
+                      className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                    >
+                      Clear All
+                    </Button>
                   </div>
                   <div className="px-6 py-4 space-y-6 max-h-96 overflow-y-auto">
                     <div className="space-y-1">
@@ -446,7 +700,7 @@ export function UniversityList() {
                       </div>
                       <Select
                         value={filters.degree}
-                        onValueChange={(value) => setFilters((prev) => ({ ...prev, degree: value }))}
+                        onValueChange={(value) => handleFilterChange("degree", value)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="e.g Bachelors" />
@@ -472,17 +726,142 @@ export function UniversityList() {
                       </div>
                       <Select
                         value={filters.city}
-                        onValueChange={(value) => setFilters((prev) => ({ ...prev, city: value }))}
+                        onValueChange={(value) => handleFilterChange("city", value)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="e.g Lahore" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="lahore">Lahore</SelectItem>
-                          <SelectItem value="karachi">Karachi</SelectItem>
-                          <SelectItem value="islamabad">Islamabad</SelectItem>
-                          <SelectItem value="rawalpindi">Rawalpindi</SelectItem>
-                          <SelectItem value="faisalabad">Faisalabad</SelectItem>
+                          <SelectItem value="Lahore">Lahore</SelectItem>
+                          <SelectItem value="Karachi">Karachi</SelectItem>
+                          <SelectItem value="Islamabad">Islamabad</SelectItem>
+                          <SelectItem value="Rawalpindi">Rawalpindi</SelectItem>
+                          <SelectItem value="Faisalabad">Faisalabad</SelectItem>
+                          <SelectItem value="Multan">Multan</SelectItem>
+                          <SelectItem value="Peshawar">Peshawar</SelectItem>
+                          <SelectItem value="Quetta">Quetta</SelectItem>
+                          <SelectItem value="Sialkot">Sialkot</SelectItem>
+                          <SelectItem value="Gujranwala">Gujranwala</SelectItem>
+                          <SelectItem value="Bahawalpur">Bahawalpur</SelectItem>
+                          <SelectItem value="Sargodha">Sargodha</SelectItem>
+                          <SelectItem value="Sukkur">Sukkur</SelectItem>
+                          <SelectItem value="Jhang">Jhang</SelectItem>
+                          <SelectItem value="Sheikhupura">Sheikhupura</SelectItem>
+                          <SelectItem value="Mardan">Mardan</SelectItem>
+                          <SelectItem value="Gujrat">Gujrat</SelectItem>
+                          <SelectItem value="Kasur">Kasur</SelectItem>
+                          <SelectItem value="Dera Ghazi Khan">Dera Ghazi Khan</SelectItem>
+                          <SelectItem value="Sahiwal">Sahiwal</SelectItem>
+                          <SelectItem value="Nawabshah">Nawabshah</SelectItem>
+                          <SelectItem value="Mirpur Khas">Mirpur Khas</SelectItem>
+                          <SelectItem value="Okara">Okara</SelectItem>
+                          <SelectItem value="Mingora">Mingora</SelectItem>
+                          <SelectItem value="Rahim Yar Khan">Rahim Yar Khan</SelectItem>
+                          <SelectItem value="Jhelum">Jhelum</SelectItem>
+                          <SelectItem value="Chiniot">Chiniot</SelectItem>
+                          <SelectItem value="Kamoke">Kamoke</SelectItem>
+                          <SelectItem value="Hafizabad">Hafizabad</SelectItem>
+                          <SelectItem value="Sadiqabad">Sadiqabad</SelectItem>
+                          <SelectItem value="Burewala">Burewala</SelectItem>
+                          <SelectItem value="Kohat">Kohat</SelectItem>
+                          <SelectItem value="Khanewal">Khanewal</SelectItem>
+                          <SelectItem value="Dera Ismail Khan">Dera Ismail Khan</SelectItem>
+                          <SelectItem value="Turbat">Turbat</SelectItem>
+                          <SelectItem value="Muzaffargarh">Muzaffargarh</SelectItem>
+                          <SelectItem value="Abbottabad">Abbottabad</SelectItem>
+                          <SelectItem value="Mandi Bahauddin">Mandi Bahauddin</SelectItem>
+                          <SelectItem value="Shikarpur">Shikarpur</SelectItem>
+                          <SelectItem value="Jacobabad">Jacobabad</SelectItem>
+                          <SelectItem value="Jatoi">Jatoi</SelectItem>
+                          <SelectItem value="Ghotki">Ghotki</SelectItem>
+                          <SelectItem value="Murree">Murree</SelectItem>
+                          <SelectItem value="Taxila">Taxila</SelectItem>
+                          <SelectItem value="Wah Cantonment">Wah Cantonment</SelectItem>
+                          <SelectItem value="Attock">Attock</SelectItem>
+                          <SelectItem value="Chakwal">Chakwal</SelectItem>
+                          <SelectItem value="Mianwali">Mianwali</SelectItem>
+                          <SelectItem value="Bhakkar">Bhakkar</SelectItem>
+                          <SelectItem value="Khushab">Khushab</SelectItem>
+                          <SelectItem value="Toba Tek Singh">Toba Tek Singh</SelectItem>
+                          <SelectItem value="Narowal">Narowal</SelectItem>
+                          <SelectItem value="Pakpattan">Pakpattan</SelectItem>
+                          <SelectItem value="Vehari">Vehari</SelectItem>
+                          <SelectItem value="Lodhran">Lodhran</SelectItem>
+                          <SelectItem value="Bahawalnagar">Bahawalnagar</SelectItem>
+                          <SelectItem value="Layyah">Layyah</SelectItem>
+                          <SelectItem value="Rajanpur">Rajanpur</SelectItem>
+                          <SelectItem value="Hyderabad">Hyderabad</SelectItem>
+                          <SelectItem value="Larkana">Larkana</SelectItem>
+                          <SelectItem value="Khairpur">Khairpur</SelectItem>
+                          <SelectItem value="Dadu">Dadu</SelectItem>
+                          <SelectItem value="Badin">Badin</SelectItem>
+                          <SelectItem value="Thatta">Thatta</SelectItem>
+                          <SelectItem value="Sanghar">Sanghar</SelectItem>
+                          <SelectItem value="Naushahro Feroze">Naushahro Feroze</SelectItem>
+                          <SelectItem value="Umerkot">Umerkot</SelectItem>
+                          <SelectItem value="Tharparkar">Tharparkar</SelectItem>
+                          <SelectItem value="Tando Allahyar">Tando Allahyar</SelectItem>
+                          <SelectItem value="Tando Muhammad Khan">Tando Muhammad Khan</SelectItem>
+                          <SelectItem value="Matiari">Matiari</SelectItem>
+                          <SelectItem value="Jamshoro">Jamshoro</SelectItem>
+                          <SelectItem value="Kashmore">Kashmore</SelectItem>
+                          <SelectItem value="Kambar Shahdadkot">Kambar Shahdadkot</SelectItem>
+                          <SelectItem value="Shaheed Benazirabad">Shaheed Benazirabad</SelectItem>
+                          <SelectItem value="Sujawal">Sujawal</SelectItem>
+                          <SelectItem value="Mansehra">Mansehra</SelectItem>
+                          <SelectItem value="Swat">Swat</SelectItem>
+                          <SelectItem value="Nowshera">Nowshera</SelectItem>
+                          <SelectItem value="Charsadda">Charsadda</SelectItem>
+                          <SelectItem value="Lakki Marwat">Lakki Marwat</SelectItem>
+                          <SelectItem value="Bannu">Bannu</SelectItem>
+                          <SelectItem value="Haripur">Haripur</SelectItem>
+                          <SelectItem value="Karak">Karak</SelectItem>
+                          <SelectItem value="Hangu">Hangu</SelectItem>
+                          <SelectItem value="Tank">Tank</SelectItem>
+                          <SelectItem value="Battagram">Battagram</SelectItem>
+                          <SelectItem value="Shangla">Shangla</SelectItem>
+                          <SelectItem value="Upper Dir">Upper Dir</SelectItem>
+                          <SelectItem value="Lower Dir">Lower Dir</SelectItem>
+                          <SelectItem value="Malakand">Malakand</SelectItem>
+                          <SelectItem value="Swabi">Swabi</SelectItem>
+                          <SelectItem value="Buner">Buner</SelectItem>
+                          <SelectItem value="Chitral">Chitral</SelectItem>
+                          <SelectItem value="Kohistan">Kohistan</SelectItem>
+                          <SelectItem value="Torghar">Torghar</SelectItem>
+                          <SelectItem value="Khyber">Khyber</SelectItem>
+                          <SelectItem value="Kurram">Kurram</SelectItem>
+                          <SelectItem value="North Waziristan">North Waziristan</SelectItem>
+                          <SelectItem value="South Waziristan">South Waziristan</SelectItem>
+                          <SelectItem value="Orakzai">Orakzai</SelectItem>
+                          <SelectItem value="Bajaur">Bajaur</SelectItem>
+                          <SelectItem value="Mohmand">Mohmand</SelectItem>
+                          <SelectItem value="Chaman">Chaman</SelectItem>
+                          <SelectItem value="Khuzdar">Khuzdar</SelectItem>
+                          <SelectItem value="Kalat">Kalat</SelectItem>
+                          <SelectItem value="Mastung">Mastung</SelectItem>
+                          <SelectItem value="Killa Abdullah">Killa Abdullah</SelectItem>
+                          <SelectItem value="Pishin">Pishin</SelectItem>
+                          <SelectItem value="Ziarat">Ziarat</SelectItem>
+                          <SelectItem value="Loralai">Loralai</SelectItem>
+                          <SelectItem value="Barkhan">Barkhan</SelectItem>
+                          <SelectItem value="Musakhel">Musakhel</SelectItem>
+                          <SelectItem value="Killa Saifullah">Killa Saifullah</SelectItem>
+                          <SelectItem value="Sherani">Sherani</SelectItem>
+                          <SelectItem value="Zhob">Zhob</SelectItem>
+                          <SelectItem value="Dera Bugti">Dera Bugti</SelectItem>
+                          <SelectItem value="Kohlu">Kohlu</SelectItem>
+                          <SelectItem value="Sibi">Sibi</SelectItem>
+                          <SelectItem value="Harnai">Harnai</SelectItem>
+                          <SelectItem value="Naseerabad">Naseerabad</SelectItem>
+                          <SelectItem value="Jaffarabad">Jaffarabad</SelectItem>
+                          <SelectItem value="Jhal Magsi">Jhal Magsi</SelectItem>
+                          <SelectItem value="Usta Muhammad">Usta Muhammad</SelectItem>
+                          <SelectItem value="Lasbela">Lasbela</SelectItem>
+                          <SelectItem value="Awaran">Awaran</SelectItem>
+                          <SelectItem value="Panjgur">Panjgur</SelectItem>
+                          <SelectItem value="Washuk">Washuk</SelectItem>
+                          <SelectItem value="Kech">Kech</SelectItem>
+                          <SelectItem value="Gwadar">Gwadar</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -500,7 +879,7 @@ export function UniversityList() {
                       </div>
                       <Select
                         value={filters.sector}
-                        onValueChange={(value) => setFilters((prev) => ({ ...prev, sector: value }))}
+                        onValueChange={(value) => handleFilterChange("sector", value)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="e.g Private" />
@@ -526,7 +905,7 @@ export function UniversityList() {
                       </div>
                       <Select
                         value={filters.programRange}
-                        onValueChange={(value) => setFilters((prev) => ({ ...prev, programRange: value }))}
+                        onValueChange={(value) => handleFilterChange("programRange", value)}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="e.g 20-30" />
@@ -538,6 +917,199 @@ export function UniversityList() {
                           <SelectItem value="31-50">31-50</SelectItem>
                           <SelectItem value="51-100">51-100</SelectItem>
                           <SelectItem value="100-999">100+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Field of Study</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("fieldOfStudy")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.fieldOfStudy}
+                        onValueChange={(value) => handleFilterChange("fieldOfStudy", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g Engineering" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Engineering">Engineering</SelectItem>
+                          <SelectItem value="Medical">Medical</SelectItem>
+                          <SelectItem value="Business">Business/Commerce</SelectItem>
+                          <SelectItem value="Computer Science">Computer Science/IT</SelectItem>
+                          <SelectItem value="Arts">Arts & Humanities</SelectItem>
+                          <SelectItem value="Science">Natural Sciences</SelectItem>
+                          <SelectItem value="Agriculture">Agriculture</SelectItem>
+                          <SelectItem value="Law">Law</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                          <SelectItem value="Pharmacy">Pharmacy</SelectItem>
+                          <SelectItem value="Architecture">Architecture</SelectItem>
+                          <SelectItem value="Economics">Economics</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Course Type</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("courseType")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.courseType}
+                        onValueChange={(value) => handleFilterChange("courseType", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g Bachelors" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Bachelors">Bachelors</SelectItem>
+                          <SelectItem value="Masters">Masters</SelectItem>
+                          <SelectItem value="MPhil">MPhil</SelectItem>
+                          <SelectItem value="PhD">PhD</SelectItem>
+                          <SelectItem value="Diploma">Diploma</SelectItem>
+                          <SelectItem value="Certificate">Certificate</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Degree Program</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("degreeProgram")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.degreeProgram}
+                        onValueChange={(value) => handleFilterChange("degreeProgram", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g Computer Science" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Computer Science">Computer Science</SelectItem>
+                          <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                          <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
+                          <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                          <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                          <SelectItem value="Chemical Engineering">Chemical Engineering</SelectItem>
+                          <SelectItem value="Business Administration">Business Administration</SelectItem>
+                          <SelectItem value="Economics">Economics</SelectItem>
+                          <SelectItem value="Medicine">Medicine</SelectItem>
+                          <SelectItem value="Dentistry">Dentistry</SelectItem>
+                          <SelectItem value="Pharmacy">Pharmacy</SelectItem>
+                          <SelectItem value="Law">Law</SelectItem>
+                          <SelectItem value="Architecture">Architecture</SelectItem>
+                          <SelectItem value="Education">Education</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Admissions Status</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("admissions")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.admissions}
+                        onValueChange={(value) => handleFilterChange("admissions", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g Open" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Open">Open</SelectItem>
+                          <SelectItem value="Closed">Closed</SelectItem>
+                          <SelectItem value="Coming Soon">Coming Soon</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Duration</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("duration")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.duration}
+                        onValueChange={(value) => handleFilterChange("duration", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g 4 Years" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2 Years">2 Years</SelectItem>
+                          <SelectItem value="3 Years">3 Years</SelectItem>
+                          <SelectItem value="4 Years">4 Years</SelectItem>
+                          <SelectItem value="5 Years">5 Years</SelectItem>
+                          <SelectItem value="6 Years">6 Years</SelectItem>
+                          <SelectItem value="1 Year">1 Year</SelectItem>
+                          <SelectItem value="1.5 Years">1.5 Years</SelectItem>
+                          <SelectItem value="2.5 Years">2.5 Years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-900">Program Name</label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => resetFilter("programName")}
+                          className="text-[#5C5FC8] hover:text-blue-700 p-0 h-auto font-normal text-xs"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                      <Select
+                        value={filters.programName}
+                        onValueChange={(value) => handleFilterChange("programName", value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="e.g Computer Science" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Computer Science">Computer Science</SelectItem>
+                          <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                          <SelectItem value="Data Science">Data Science</SelectItem>
+                          <SelectItem value="Artificial Intelligence">Artificial Intelligence</SelectItem>
+                          <SelectItem value="Machine Learning">Machine Learning</SelectItem>
+                          <SelectItem value="Cybersecurity">Cybersecurity</SelectItem>
+                          <SelectItem value="Web Development">Web Development</SelectItem>
+                          <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+                          <SelectItem value="Database Management">Database Management</SelectItem>
+                          <SelectItem value="Network Engineering">Network Engineering</SelectItem>
+                          <SelectItem value="Cloud Computing">Cloud Computing</SelectItem>
+                          <SelectItem value="DevOps">DevOps</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

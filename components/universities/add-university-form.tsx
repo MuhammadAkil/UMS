@@ -45,16 +45,13 @@ const validationSchema = Yup.object({
   phone: Yup.string().matches(/^\d{4}-\d{7}$/, "Phone must be in format 0300-1234567").required("Phone is required"),
   address: Yup.string().max(500, "Address must be 500 characters or less").required("Address is required"),
   about: Yup.string().max(1000, "About must be 1000 characters or less").required("About is required"),
-  photo: Yup.mixed().required("Photo is required").test("fileType", "Photo must be an image", (value) => {
-    return value && value instanceof File && value.type.startsWith("image/")
-  }),
-  admissionTestType: Yup.string().required("At least one admission test type is required"),
-  weightages: Yup.array().of(
-    Yup.object({
-      type: Yup.string(),
-      value: Yup.string().matches(/^\d+(\.\d{1,2})?%$/, "Must be a valid percentage (e.g., 80%)").optional(),
-    })
-  ),
+  photo: Yup.mixed().optional(),
+  admissionTestType: Yup.string().optional(),
+  weightages: Yup.array().optional(), // Make weightages completely optional
+  bachelors_weightages: Yup.array().optional(), // Add new field names
+  masters_weightages: Yup.array().optional(),
+  mphil_weightages: Yup.array().optional(),
+  phd_weightages: Yup.array().optional(),
 })
 
 export function AddUniversityForm() {
@@ -75,6 +72,11 @@ export function AddUniversityForm() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Sync weightages state with form values
+  useEffect(() => {
+    // Weightages state updated
+  }, [weightages])
+
   const initialValues = {
     fullName: "",
     shortName: "",
@@ -89,7 +91,31 @@ export function AddUniversityForm() {
     about: "",
     photo: null as File | null,
     admissionTestType: "",
-    weightages,
+    weightages: [
+      { type: "Matric", value: "" },
+      { type: "FSC", value: "" },
+      { type: "Test", value: "" },
+    ],
+    bachelors_weightages: [
+      { type: "Matric", value: "" },
+      { type: "FSC", value: "" },
+      { type: "Test", value: "" },
+    ],
+    masters_weightages: [
+      { type: "Bachelor's CGPA/Percentage", value: "" },
+      { type: "Entry Test", value: "" },
+      { type: "Interview", value: "" },
+    ],
+    mphil_weightages: [
+      { type: "Master's CGPA/Percentage", value: "" },
+      { type: "Entry Test", value: "" },
+      { type: "Interview", value: "" },
+    ],
+    phd_weightages: [
+      { type: "Master's CGPA/Percentage", value: "" },
+      { type: "Entry Test", value: "" },
+      { type: "Interview", value: "" },
+    ],
   }
 
   const handleAddProgram = (program: Omit<Program, "id">) => {
@@ -145,9 +171,9 @@ function ProgressBar({ percentage }: { percentage: number }) {
       </div>
 
       {/* Progress bar container */}
-      <div className="w-full bg-white rounded-full h-2">
+      <div className="w-full bg-gray-200 rounded-full h-2">
         <div
-          className="bg-[#5C5FC8] h-2 rounded-full transition-all duration-300 ease-in-out"
+          className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -156,9 +182,19 @@ function ProgressBar({ percentage }: { percentage: number }) {
 }
 
   const handleSubmit = async (values: typeof initialValues) => {
+    console.log("🚀 Form submission started!")
+    console.log("📦 Payload being sent:", {
+      fullName: values.fullName,
+      shortName: values.shortName,
+      programsCount: programs.length,
+      weightagesCount: weightages.filter(w => w.value).length
+    })
+    
     setIsLoading(true)
     const formData = new FormData()
-    formData.append("photo", values.photo!)
+    if (values.photo) {
+      formData.append("photo", values.photo)
+    }
 
     const payload = {
       fullName: values.fullName,
@@ -173,7 +209,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
       address: values.address,
       about: values.about,
       admissionTestType: values.admissionTestType,
-      weightages: values.weightages.filter((w) => w.value),
+      weightages: weightages.filter((w) => w.value), // Use the state directly instead of values.weightages
       programs: programs.map((p) => ({
         name: p.name,
         degree: p.degree,
@@ -185,12 +221,14 @@ function ProgressBar({ percentage }: { percentage: number }) {
       })),
     }
 
-    console.log("Formatted JSON Payload:", payload)
+    console.log("🌐 Making API call to universityAPI.createUniversity...")
+    
     try {
       const result = await universityAPI.createUniversity(payload)
-      console.log("API Response:", result)
+      console.log("✅ API Response:", result)
       
       if (result.success) {
+        console.log("🎉 Success! University added successfully.")
         setTimeout(() => {
           setIsLoading(false)
           toast({
@@ -210,6 +248,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
         throw new Error(result.message || "Failed to add university.")
       }
     } catch (error) {
+      console.error("❌ API Error:", error)
       setIsLoading(false)
       toast({
         title: "Error",
@@ -222,9 +261,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
 
   const programStats = {
     bachelors: programs.filter((p) => p.degree === "Bachelors").length,
-    masters: programs.filter(
-      (p) => p.degree.includes("Masters") || p.degree.includes("MPhil")
-    ).length,
+    masters: programs.filter((p) => p.degree.includes("Masters") || p.degree.includes("MPhil")).length,
     phd: programs.filter((p) => p.degree === "PhD").length,
   }
 
@@ -250,7 +287,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {({ setFieldValue, values, isValid }) => (
+        {({ setFieldValue, values, isValid, submitForm }) => (
           <Form>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="bg-gray-100">
@@ -342,9 +379,11 @@ function ProgressBar({ percentage }: { percentage: number }) {
                                   <SelectValue placeholder="Select sector" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Public">Government</SelectItem>
+                                  <SelectItem value="Public">Public/Government</SelectItem>
                                   <SelectItem value="Private">Private</SelectItem>
-                                  <SelectItem value="Community">Semi Government</SelectItem>
+                                  <SelectItem value="Semi-Government">Semi-Government</SelectItem>
+                                  <SelectItem value="Federal">Federal</SelectItem>
+                                  <SelectItem value="Provincial">Provincial</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -373,10 +412,18 @@ function ProgressBar({ percentage }: { percentage: number }) {
                                   <SelectValue placeholder="Select field of study" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="business">Business</SelectItem>
-                                  <SelectItem value="engineering">Engineering</SelectItem>
-                                  <SelectItem value="medical">Medical</SelectItem>
-                                  <SelectItem value="arts">Arts</SelectItem>
+                                  <SelectItem value="Engineering">Engineering</SelectItem>
+                                  <SelectItem value="Medical">Medical</SelectItem>
+                                  <SelectItem value="Business">Business/Commerce</SelectItem>
+                                  <SelectItem value="Computer Science">Computer Science/IT</SelectItem>
+                                  <SelectItem value="Arts">Arts & Humanities</SelectItem>
+                                  <SelectItem value="Science">Natural Sciences</SelectItem>
+                                  <SelectItem value="Agriculture">Agriculture</SelectItem>
+                                  <SelectItem value="Law">Law</SelectItem>
+                                  <SelectItem value="Education">Education</SelectItem>
+                                  <SelectItem value="Pharmacy">Pharmacy</SelectItem>
+                                  <SelectItem value="Architecture">Architecture</SelectItem>
+                                  <SelectItem value="Economics">Economics</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -406,10 +453,133 @@ function ProgressBar({ percentage }: { percentage: number }) {
                                   <SelectValue placeholder="Select city" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Lahore">Lahore</SelectItem>
-                                  <SelectItem value="Karachi">Karachi</SelectItem>
+                                  <SelectItem value="Abbottabad">Abbottabad</SelectItem>
+                                  <SelectItem value="Attock">Attock</SelectItem>
+                                  <SelectItem value="Awaran">Awaran</SelectItem>
+                                  <SelectItem value="Badin">Badin</SelectItem>
+                                  <SelectItem value="Bahawalnagar">Bahawalnagar</SelectItem>
+                                  <SelectItem value="Bahawalpur">Bahawalpur</SelectItem>
+                                  <SelectItem value="Bajaur">Bajaur</SelectItem>
+                                  <SelectItem value="Bannu">Bannu</SelectItem>
+                                  <SelectItem value="Barkhan">Barkhan</SelectItem>
+                                  <SelectItem value="Battagram">Battagram</SelectItem>
+                                  <SelectItem value="Bhakkar">Bhakkar</SelectItem>
+                                  <SelectItem value="Buner">Buner</SelectItem>
+                                  <SelectItem value="Burewala">Burewala</SelectItem>
+                                  <SelectItem value="Chakwal">Chakwal</SelectItem>
+                                  <SelectItem value="Chaman">Chaman</SelectItem>
+                                  <SelectItem value="Charsadda">Charsadda</SelectItem>
+                                  <SelectItem value="Chiniot">Chiniot</SelectItem>
+                                  <SelectItem value="Chitral">Chitral</SelectItem>
+                                  <SelectItem value="Dadu">Dadu</SelectItem>
+                                  <SelectItem value="Dera Bugti">Dera Bugti</SelectItem>
+                                  <SelectItem value="Dera Ghazi Khan">Dera Ghazi Khan</SelectItem>
+                                  <SelectItem value="Dera Ismail Khan">Dera Ismail Khan</SelectItem>
+                                  <SelectItem value="Faisalabad">Faisalabad</SelectItem>
+                                  <SelectItem value="Ghotki">Ghotki</SelectItem>
+                                  <SelectItem value="Gujranwala">Gujranwala</SelectItem>
+                                  <SelectItem value="Gujrat">Gujrat</SelectItem>
+                                  <SelectItem value="Gwadar">Gwadar</SelectItem>
+                                  <SelectItem value="Hafizabad">Hafizabad</SelectItem>
+                                  <SelectItem value="Hangu">Hangu</SelectItem>
+                                  <SelectItem value="Haripur">Haripur</SelectItem>
+                                  <SelectItem value="Harnai">Harnai</SelectItem>
+                                  <SelectItem value="Hyderabad">Hyderabad</SelectItem>
                                   <SelectItem value="Islamabad">Islamabad</SelectItem>
+                                  <SelectItem value="Jacobabad">Jacobabad</SelectItem>
+                                  <SelectItem value="Jaffarabad">Jaffarabad</SelectItem>
+                                  <SelectItem value="Jamshoro">Jamshoro</SelectItem>
+                                  <SelectItem value="Jatoi">Jatoi</SelectItem>
+                                  <SelectItem value="Jhang">Jhang</SelectItem>
+                                  <SelectItem value="Jhal Magsi">Jhal Magsi</SelectItem>
+                                  <SelectItem value="Jhelum">Jhelum</SelectItem>
+                                  <SelectItem value="Kambar Shahdadkot">Kambar Shahdadkot</SelectItem>
+                                  <SelectItem value="Kamoke">Kamoke</SelectItem>
+                                  <SelectItem value="Karachi">Karachi</SelectItem>
+                                  <SelectItem value="Karak">Karak</SelectItem>
+                                  <SelectItem value="Kashmore">Kashmore</SelectItem>
+                                  <SelectItem value="Kasur">Kasur</SelectItem>
+                                  <SelectItem value="Kech">Kech</SelectItem>
+                                  <SelectItem value="Khanewal">Khanewal</SelectItem>
+                                  <SelectItem value="Khairpur">Khairpur</SelectItem>
+                                  <SelectItem value="Khyber">Khyber</SelectItem>
+                                  <SelectItem value="Khushab">Khushab</SelectItem>
+                                  <SelectItem value="Khuzdar">Khuzdar</SelectItem>
+                                  <SelectItem value="Killa Abdullah">Killa Abdullah</SelectItem>
+                                  <SelectItem value="Killa Saifullah">Killa Saifullah</SelectItem>
+                                  <SelectItem value="Kohistan">Kohistan</SelectItem>
+                                  <SelectItem value="Kohlu">Kohlu</SelectItem>
+                                  <SelectItem value="Kohat">Kohat</SelectItem>
+                                  <SelectItem value="Kurram">Kurram</SelectItem>
+                                  <SelectItem value="Lahore">Lahore</SelectItem>
+                                  <SelectItem value="Lakki Marwat">Lakki Marwat</SelectItem>
+                                  <SelectItem value="Larkana">Larkana</SelectItem>
+                                  <SelectItem value="Lasbela">Lasbela</SelectItem>
+                                  <SelectItem value="Layyah">Layyah</SelectItem>
+                                  <SelectItem value="Lodhran">Lodhran</SelectItem>
+                                  <SelectItem value="Lower Dir">Lower Dir</SelectItem>
+                                  <SelectItem value="Malakand">Malakand</SelectItem>
+                                  <SelectItem value="Mandi Bahauddin">Mandi Bahauddin</SelectItem>
+                                  <SelectItem value="Mansehra">Mansehra</SelectItem>
+                                  <SelectItem value="Mardan">Mardan</SelectItem>
+                                  <SelectItem value="Matiari">Matiari</SelectItem>
+                                  <SelectItem value="Mianwali">Mianwali</SelectItem>
+                                  <SelectItem value="Mingora">Mingora</SelectItem>
+                                  <SelectItem value="Mirpur Khas">Mirpur Khas</SelectItem>
+                                  <SelectItem value="Mohmand">Mohmand</SelectItem>
+                                  <SelectItem value="Multan">Multan</SelectItem>
+                                  <SelectItem value="Muzaffargarh">Muzaffargarh</SelectItem>
+                                  <SelectItem value="Murree">Murree</SelectItem>
+                                  <SelectItem value="Musakhel">Musakhel</SelectItem>
+                                  <SelectItem value="Narowal">Narowal</SelectItem>
+                                  <SelectItem value="Naseerabad">Naseerabad</SelectItem>
+                                  <SelectItem value="Naushahro Feroze">Naushahro Feroze</SelectItem>
+                                  <SelectItem value="Nawabshah">Nawabshah</SelectItem>
+                                  <SelectItem value="North Waziristan">North Waziristan</SelectItem>
+                                  <SelectItem value="Nowshera">Nowshera</SelectItem>
+                                  <SelectItem value="Okara">Okara</SelectItem>
+                                  <SelectItem value="Orakzai">Orakzai</SelectItem>
+                                  <SelectItem value="Pakpattan">Pakpattan</SelectItem>
+                                  <SelectItem value="Panjgur">Panjgur</SelectItem>
+                                  <SelectItem value="Peshawar">Peshawar</SelectItem>
+                                  <SelectItem value="Pishin">Pishin</SelectItem>
+                                  <SelectItem value="Quetta">Quetta</SelectItem>
+                                  <SelectItem value="Rahim Yar Khan">Rahim Yar Khan</SelectItem>
+                                  <SelectItem value="Rajanpur">Rajanpur</SelectItem>
+                                  <SelectItem value="Rawalpindi">Rawalpindi</SelectItem>
+                                  <SelectItem value="Sadiqabad">Sadiqabad</SelectItem>
+                                  <SelectItem value="Sahiwal">Sahiwal</SelectItem>
+                                  <SelectItem value="Sanghar">Sanghar</SelectItem>
+                                  <SelectItem value="Sargodha">Sargodha</SelectItem>
+                                  <SelectItem value="Shaheed Benazirabad">Shaheed Benazirabad</SelectItem>
+                                  <SelectItem value="Shangla">Shangla</SelectItem>
+                                  <SelectItem value="Sheikhupura">Sheikhupura</SelectItem>
+                                  <SelectItem value="Sherani">Sherani</SelectItem>
+                                  <SelectItem value="Shikarpur">Shikarpur</SelectItem>
+                                  <SelectItem value="Sialkot">Sialkot</SelectItem>
+                                  <SelectItem value="Sibi">Sibi</SelectItem>
+                                  <SelectItem value="South Waziristan">South Waziristan</SelectItem>
+                                  <SelectItem value="Sujawal">Sujawal</SelectItem>
+                                  <SelectItem value="Sukkur">Sukkur</SelectItem>
+                                  <SelectItem value="Swabi">Swabi</SelectItem>
+                                  <SelectItem value="Swat">Swat</SelectItem>
+                                  <SelectItem value="Tando Allahyar">Tando Allahyar</SelectItem>
+                                  <SelectItem value="Tando Muhammad Khan">Tando Muhammad Khan</SelectItem>
+                                  <SelectItem value="Tank">Tank</SelectItem>
                                   <SelectItem value="Taxila">Taxila</SelectItem>
+                                  <SelectItem value="Thatta">Thatta</SelectItem>
+                                  <SelectItem value="Tharparkar">Tharparkar</SelectItem>
+                                  <SelectItem value="Toba Tek Singh">Toba Tek Singh</SelectItem>
+                                  <SelectItem value="Torghar">Torghar</SelectItem>
+                                  <SelectItem value="Turbat">Turbat</SelectItem>
+                                  <SelectItem value="Umerkot">Umerkot</SelectItem>
+                                  <SelectItem value="Upper Dir">Upper Dir</SelectItem>
+                                  <SelectItem value="Usta Muhammad">Usta Muhammad</SelectItem>
+                                  <SelectItem value="Vehari">Vehari</SelectItem>
+                                  <SelectItem value="Wah Cantonment">Wah Cantonment</SelectItem>
+                                  <SelectItem value="Washuk">Washuk</SelectItem>
+                                  <SelectItem value="Ziarat">Ziarat</SelectItem>
+                                  <SelectItem value="Zhob">Zhob</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -452,9 +622,9 @@ function ProgressBar({ percentage }: { percentage: number }) {
                       <div className="flex items-center justify-end space-x-4 pt-6">
                         <Button
                           type="button"
-                          className="bg-[#5C5FC8] hover:bg-[#5C5FC8]/80"
+                          className="bg-[#5C5FC8] hover:bg-blue-400"
                           onClick={() => setActiveTab("programs")}
-                          disabled={!isValid}
+                          disabled={!values.fullName || !values.shortName || !values.sector || !values.fieldOfStudy || !values.city || !values.websiteUrl || !values.applyUrl || !values.email || !values.phone || !values.address || !values.about}
                         >
                           Next Programs
                         </Button>
@@ -644,50 +814,50 @@ function ProgressBar({ percentage }: { percentage: number }) {
                                 <Label>Matric Weightage (%)</Label>
                                 <Field
                                   as={Input}
-                                  name="weightages[0].value"
+                                  name="bachelors_weightages[0].value"
                                   placeholder="0%"
                                   value={weightages[0]?.value || ""}
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     const newWeightages = [...weightages]
                                     newWeightages[0] = { type: "Matric", value: e.target.value }
                                     setWeightages(newWeightages)
-                                    setFieldValue("weightages[0].value", e.target.value)
+                                    setFieldValue("bachelors_weightages[0].value", e.target.value)
                                   }}
                                 />
-                                <ErrorMessage name="weightages[0].value" component="div" className="text-red-500 text-sm" />
+                                <ErrorMessage name="bachelors_weightages[0].value" component="div" className="text-red-500 text-sm" />
                               </div>
                               <div className="space-y-2 flex-1">
                                 <Label>FSC Weightage (%)</Label>
                                 <Field
                                   as={Input}
-                                  name="weightages[1].value"
+                                  name="bachelors_weightages[1].value"
                                   placeholder="0%"
                                   value={weightages[1]?.value || ""}
                                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                     const newWeightages = [...weightages]
                                     newWeightages[1] = { type: "FSC", value: e.target.value }
                                     setWeightages(newWeightages)
-                                    setFieldValue("weightages[1].value", e.target.value)
+                                    setFieldValue("bachelors_weightages[1].value", e.target.value)
                                   }}
                                 />
-                                <ErrorMessage name="weightages[1].value" component="div" className="text-red-500 text-sm" />
+                                <ErrorMessage name="bachelors_weightages[1].value" component="div" className="text-red-500 text-sm" />
                               </div>
                             </div>
                             <div className="space-y-2">
                               <Label>Test Weightage (%)</Label>
                               <Field
                                 as={Input}
-                                name="weightages[2].value"
+                                name="bachelors_weightages[2].value"
                                 placeholder="0%"
                                 value={weightages[2]?.value || ""}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                                   const newWeightages = [...weightages]
                                   newWeightages[2] = { type: "Test", value: e.target.value }
                                   setWeightages(newWeightages)
-                                  setFieldValue("weightages[2].value", e.target.value)
+                                  setFieldValue("bachelors_weightages[2].value", e.target.value)
                                 }}
                               />
-                              <ErrorMessage name="weightages[2].value" component="div" className="text-red-500 text-sm" />
+                              <ErrorMessage name="bachelors_weightages[2].value" component="div" className="text-red-500 text-sm" />
                             </div>
                           </div>
                         </TabsContent>
@@ -908,38 +1078,6 @@ function ProgressBar({ percentage }: { percentage: number }) {
                           </div>
                         </TabsContent>
                       </Tabs>
-                      {weightages.map((weightage, index) => (
-    weightage.value && (
-      <div key={index} className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label>{weightage.type} Weightage</Label>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-600"
-            onClick={() => setShowDeleteConfirm(index)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Field
-            as={Input}
-            name={`weightages[${index}].value`}
-            placeholder="0%"
-            value={weightage.value}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              const newWeightages = [...weightages];
-              newWeightages[index] = { type: weightage.type, value: e.target.value };
-              setWeightages(newWeightages);
-              setFieldValue(`weightages[${index}].value`, e.target.value);
-            }}
-          />
-        </div>
-        <ErrorMessage name={`weightages[${index}].value`} component="div" className="text-red-500 text-sm" />
-      </div>
-    )
-  ))}
                       <div className="flex justify-end  mt-4 mb-4">
                         <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={() => setShowAddFieldModal(true)}>
                           <Plus className="w-4 h-4 mr-2" /> Add Field
@@ -974,7 +1112,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
                             </div>
                             <div className="flex justify-end space-x-2 mt-4">
                               <Button className="bg-white" variant="outline" onClick={() => setShowAddFieldModal(false)}>Cancel</Button>
-                              <Button className="bg-[#5C5FC8] hover:bg-[#5C5FC8]/80" onClick={handleAddField}>Save</Button>
+                              <Button className="bg-[#5C5FC8] hover:bg-blue-400" onClick={handleAddField}>Save</Button>
                             </div>
                           </div>
                         </div>
@@ -1001,8 +1139,20 @@ function ProgressBar({ percentage }: { percentage: number }) {
                           Previous
                         </Button>
                         <div className="space-x-2">
-                          <Button variant="outline" className="bg-transparent text-[#5C5FC8] border-[#5C5FC8] hover:bg-[#5C5FC8]/80 hover:text-white">Move to Inprogress</Button>
-                          <Button className="bg-[#5C5FC8] hover:bg-[#5C5FC8]/80" type="submit" disabled={isLoading || !isValid}>
+                          <Button variant="outline" className="bg-transparent text-[#5C5FC8] border-[#5C5FC8] hover:bg-blue-400">Move to Inprogress</Button>
+                          <Button 
+                            className="bg-[#5C5FC8] hover:bg-blue-400" 
+                            type="submit" 
+                            disabled={isLoading}
+                            onClick={() => {
+                              console.log("🔘 Upload button clicked!")
+                              // Backup submit method
+                              if (!isValid) {
+                                console.log("⚠️ Form is not valid, trying manual submit...")
+                                submitForm()
+                              }
+                            }}
+                          >
                             {isLoading ? (
                               <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             ) : null}

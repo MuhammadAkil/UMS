@@ -44,9 +44,9 @@ const validationSchema = Yup.object({
   programName: Yup.string().max(100, "Program name must be 100 characters or less").required("Program name is required"),
   duration: Yup.string().required("Duration is required"),
   feePerSemester: Yup.number().positive("Fee must be a positive number").required("Fee per semester is required"),
-  deadline: Yup.string().matches(/^\d{4}-\d{2}-\d{2}$/, "Deadline must be in YYYY-MM-DD format").required("Deadline is required"),
+  deadline: Yup.string().required("Deadline is required"),
   admissionStatus: Yup.string().oneOf(["Open", "Closed"], "Invalid status").required("Admission status is required"),
-  lastYearMerit: Yup.string().matches(/^\d+(\.\d{1,2})?%$/, "Merit must be a valid percentage (e.g., 80.0%)").required("Last year merit is required"),
+  lastYearMerit: Yup.string().required("Last year merit is required"),
 })
 
 export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: AddProgramDrawerProps) {
@@ -148,6 +148,7 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                           <SelectItem value="3 Years">3 Years</SelectItem>
                           <SelectItem value="4 Years">4 Years</SelectItem>
                           <SelectItem value="5 Years">5 Years</SelectItem>
+                          <SelectItem value="6 Years">6 Years</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -160,33 +161,29 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                     as={Input}
                     id="feePerSemester"
                     name="feePerSemester"
-                    placeholder="150000"
                     type="number"
+                    placeholder="150000"
                   />
                   <ErrorMessage name="feePerSemester" component="div" className="text-red-500 text-sm" />
                 </div>
-            <div className="space-y-2">
-  <Label htmlFor="deadline" className="text-black">Deadline</Label>
-  <div>
-    <Field name="deadline">
-      {({ field, form }: any) => (
-        <DatePicker
-          id="deadline"
-          selected={field.value ? parseISO(field.value) : null}
-          onChange={(date: Date) => {
-            const formatted = date ? format(date, "yyyy-MM-dd") : "";
-            form.setFieldValue("deadline", formatted);
-          }}
-          dateFormat="yyyy-MM-dd"
-          placeholderText="YYYY-MM-DD"
-          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-      )}
-    </Field>
-  </div>
-  <ErrorMessage name="deadline" component="div" className="text-red-500 text-sm" />
-</div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="deadline" className="text-black">Deadline</Label>
+                  <DatePicker
+                    selected={values.deadline ? new Date(values.deadline) : null}
+                    onChange={(date) => {
+                      const formattedDate = date ? format(date, 'yyyy-MM-dd') : ''
+                      setFieldValue("deadline", formattedDate)
+                    }}
+                    minDate={new Date()}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="YYYY-MM-DD"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    showYearDropdown
+                    scrollableYearDropdown
+                    yearDropdownItemNumber={15}
+                  />
+                  <ErrorMessage name="deadline" component="div" className="text-red-500 text-sm" />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="admissionStatus" className="text-black">Admission Status</Label>
                   <Field name="admissionStatus">
@@ -217,11 +214,11 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
                   />
                   <ErrorMessage name="lastYearMerit" component="div" className="text-red-500 text-sm" />
                 </div>
-                <div className="flex items-center justify-end space-x-2 pt-6">
+                <div className="flex justify-end space-x-2 pt-4">
                   <Button type="button" variant="outline" onClick={onClose}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-[#5C5FC8] hover:bg-[#5C5FC8]/80">
+                  <Button type="submit" className="bg-[#5C5FC8] hover:bg-blue-400">
                     {isEdit ? "Update" : "Save"}
                   </Button>
                 </div>
@@ -231,5 +228,5 @@ export function AddProgramDrawer({ open, onClose, onAdd, initialData, isEdit }: 
         </div>
       </div>
     </div>
-  );
+  )
 }
